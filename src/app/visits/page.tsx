@@ -17,8 +17,8 @@ export default function StudentVisitsPage() {
   const loadVisits = async () => {
     setLoading(true);
     try {
-      // Load student visits (mock user "u-101")
-      const data = await visitService.getUserVisits("u-101");
+      // Load student visits from Supabase
+      const data = await visitService.getUserVisits();
       setVisits(data);
     } catch (err) {
       console.error("Failed to load user visits", err);

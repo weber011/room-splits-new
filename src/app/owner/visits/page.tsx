@@ -22,7 +22,7 @@ export default function OwnerVisitsPage() {
   const loadVisits = async () => {
     setLoading(true);
     try {
-      const data = await visitService.getOwnerVisits("owner-1");
+      const data = await visitService.getOwnerVisitPasses();
       setVisits(data);
     } catch (err) {
       console.error("Failed to load owner visits", err);
@@ -150,8 +150,8 @@ export default function OwnerVisitsPage() {
                       <User className="h-4 w-4 text-emerald-400" />
                       <h4 className="font-bold text-base text-white">{v.user?.fullName || "Student User"}</h4>
                       {getStatusBadge(v.status)}
-                      <Badge variant="outline" className="text-[10px]">
-                        Payment: {v.paymentStatus}
+                      <Badge variant="outline" className="text-[10px] text-emerald-400 border-emerald-500/30">
+                        Free Tour Request
                       </Badge>
                     </div>
                     <p className="text-xs text-slate-300 font-semibold">{v.property?.title || "Property"}</p>
@@ -175,7 +175,7 @@ export default function OwnerVisitsPage() {
                       <Phone className="h-3.5 w-3.5" />
                       {v.user?.phone || "+91 98765 43210"}
                     </span>
-                    <span className="text-slate-400">Visit Fee: ₹{v.visitPassAmount}</span>
+                    <span className="text-slate-400">Zero Brokerage Tour</span>
                   </div>
 
                   {/* Owner Action Buttons */}

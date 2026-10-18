@@ -14,7 +14,6 @@ import {
   Users,
   Shield,
   Settings,
-  LogOut,
 } from "lucide-react";
 
 export interface SidebarItem {
@@ -84,21 +83,21 @@ export function DashboardSidebar({ role = "tenant", className }: DashboardSideba
   return (
     <aside
       className={cn(
-        "hidden md:flex flex-col justify-between w-64 border-r border-slate-800 bg-slate-950 p-6 min-h-[calc(100vh-5rem)]",
+        "hidden md:flex flex-col justify-between w-64 border-r border-[#10164F]/10 bg-white p-6 min-h-[calc(100vh-5rem)]",
         className
       )}
     >
       <div className="space-y-6">
         {/* Role Badge */}
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800">
-          <Shield className="h-4 w-4 text-emerald-400" />
-          <span className="text-xs font-bold text-slate-200 capitalize tracking-wide">
+        <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-[#10164F]/5 border border-[#10164F]/10">
+          <Shield className="h-4 w-4 text-[#3129C8]" />
+          <span className="text-xs font-black text-[#10164F] capitalize tracking-wide">
             {role} Portal
           </span>
         </div>
 
         {/* Navigation Items */}
-        <nav className="space-y-1.5">
+        <nav className="space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -107,10 +106,10 @@ export function DashboardSidebar({ role = "tenant", className }: DashboardSideba
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all",
+                  "flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all",
                   isActive
-                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
+                    ? "bg-[#3129C8] text-white shadow-xs"
+                    : "text-gray-600 hover:text-[#10164F] hover:bg-gray-100"
                 )}
               >
                 <div className="flex items-center gap-3">
@@ -118,7 +117,12 @@ export function DashboardSidebar({ role = "tenant", className }: DashboardSideba
                   <span>{item.name}</span>
                 </div>
                 {item.badge && (
-                  <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-[10px] font-black",
+                      isActive ? "bg-white text-[#3129C8]" : "bg-[#FFF45C] text-[#10164F]"
+                    )}
+                  >
                     {item.badge}
                   </span>
                 )}
@@ -129,20 +133,14 @@ export function DashboardSidebar({ role = "tenant", className }: DashboardSideba
       </div>
 
       {/* Footer Settings & Sign Out */}
-      <div className="pt-6 border-t border-slate-800 space-y-1.5">
+      <div className="pt-6 border-t border-[#10164F]/10 space-y-1.5">
         <Link
-          href="#settings"
-          className="flex items-center gap-3 px-3.5 py-2 text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-900 rounded-xl transition-all"
+          href="/account"
+          className="flex items-center gap-3 px-3.5 py-2 text-xs font-bold text-gray-600 hover:text-[#10164F] hover:bg-gray-100 rounded-xl transition-all"
         >
-          <Settings className="h-4 w-4" />
+          <Settings className="h-4 w-4 text-[#3129C8]" />
           <span>Account Settings</span>
         </Link>
-        <button
-          className="w-full flex items-center gap-3 px-3.5 py-2 text-xs font-medium text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all text-left"
-        >
-          <LogOut className="h-4 w-4" />
-          <span>Sign Out</span>
-        </button>
       </div>
     </aside>
   );

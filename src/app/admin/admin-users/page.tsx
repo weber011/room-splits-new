@@ -57,7 +57,7 @@ export default function AdminStaffPage() {
                       <Shield className="h-4 w-4 text-amber-400" />
                       {u.fullName}
                     </td>
-                    <td className="py-3 px-4 font-mono text-slate-400">{u.email}</td>
+                    <td className="py-3 px-4 font-mono text-slate-400">{u.email || u.phone}</td>
                     <td className="py-3 px-4 capitalize font-semibold text-emerald-400">{u.role}</td>
                     <td className="py-3 px-4">
                       <Badge variant="accent" className="text-[9px]">Verified</Badge>

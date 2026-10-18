@@ -10,18 +10,18 @@ export interface VerifiedBadgeProps {
 export function VerifiedBadge({ type = "property", className }: VerifiedBadgeProps) {
   const labelMap = {
     property: "Verified PG",
-    owner: "Verified Owner",
-    resident: "KYC Verified Resident",
+    owner: "Verified Host",
+    resident: "Verified Student",
   };
 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-xs font-semibold text-emerald-400 shadow-sm backdrop-blur-md",
+        "inline-flex items-center gap-1.5 rounded-full bg-[#A7F3D0] border border-emerald-300/80 px-2.5 py-0.5 text-[11px] font-extrabold text-[#10164F] shadow-sm",
         className
       )}
     >
-      <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+      <ShieldCheck className="h-3.5 w-3.5 text-[#10164F]" />
       <span>{labelMap[type]}</span>
     </span>
   );

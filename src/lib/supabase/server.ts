@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { env } from "@/config/env";
+export type { Database } from "@/types/database.types";
 
 interface CookieToSet {
   name: string;

@@ -1,92 +1,127 @@
 import Link from "next/link";
-import { siteConfig } from "@/config/site.config";
-import { Building2, Heart, Mail, Phone, MapPin, Shield, CheckCircle } from "lucide-react";
+import { Logo } from "@/components/brand";
+import { MapPin, Shield, CheckCircle } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t border-slate-800 bg-slate-950 text-slate-400 py-16">
+    <footer className="border-t border-slate-200 bg-[#FAFAF7] text-[#64748B] py-14">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
-          {/* Col 1 & 2: Branding */}
-          <div className="lg:col-span-2 space-y-5">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-md shadow-emerald-500/20">
-                <Building2 className="h-5 w-5" />
-              </div>
-              <span className="text-xl font-bold tracking-tight text-white font-sans">
-                Room<span className="text-emerald-400">Splits</span>
-              </span>
-            </Link>
-            <p className="text-sm text-slate-400 leading-relaxed max-w-sm">
-              The modern discovery, visit scheduling, instant booking, and rent management platform for PGs, Hostels, and Co-living spaces across India.
+          {/* Col 1 & 2: Brand Overview */}
+          <div className="lg:col-span-2 space-y-4">
+            <Logo size="md" href="/" showTagline />
+            <p className="text-xs sm:text-sm text-[#64748B] leading-relaxed max-w-sm">
+              Jharkhand&apos;s modern student accommodation discovery, visit scheduling, and PG stay platform. Built for university students and trustworthy PG owners.
             </p>
-            <div className="flex items-center gap-4 text-xs text-slate-400 pt-2">
-              <div className="flex items-center gap-1">
-                <Shield className="h-4 w-4 text-emerald-400" />
-                <span>Verified Owners</span>
+            <div className="flex flex-wrap items-center gap-4 text-xs text-[#10164F] pt-2 font-medium">
+              <div className="flex items-center gap-1.5">
+                <Shield className="h-4 w-4 text-[#3129C8]" />
+                <span>Audited Listings</span>
               </div>
-              <div className="flex items-center gap-1">
-                <CheckCircle className="h-4 w-4 text-emerald-400" />
-                <span>Zero Brokerage Options</span>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle className="h-4 w-4 text-emerald-600" />
+                <span>Zero Brokerage</span>
               </div>
             </div>
           </div>
 
-          {/* Col 3: Quick Links */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-white tracking-wider uppercase">
-              Discovery
+          {/* Col 3: Navigation */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold text-[#10164F] tracking-wider uppercase">
+              Navigation
             </h4>
-            <ul className="space-y-2.5 text-sm">
-              <li><Link href="#pg" className="hover:text-emerald-400 transition-colors">Boys PG & Hostels</Link></li>
-              <li><Link href="#girls-pg" className="hover:text-emerald-400 transition-colors">Girls PG & Hostels</Link></li>
-              <li><Link href="#coliving" className="hover:text-emerald-400 transition-colors">Premium Co-living</Link></li>
-              <li><Link href="#flats" className="hover:text-emerald-400 transition-colors">Shared Flats & Rooms</Link></li>
+            <ul className="space-y-2 text-xs font-semibold">
+              <li>
+                <Link href="/" className="hover:text-[#3129C8] transition-colors">
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link href="/discover" className="hover:text-[#3129C8] transition-colors">
+                  Discover PGs
+                </Link>
+              </li>
+              <li>
+                <Link href="/#how-it-works" className="hover:text-[#3129C8] transition-colors">
+                  How It Works
+                </Link>
+              </li>
+              <li>
+                <Link href="/signup?role=owner" className="hover:text-[#3129C8] transition-colors">
+                  List Your Property
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* Col 4: Platform */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-white tracking-wider uppercase">
-              Platform & Features
+          {/* Col 4: Support */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold text-[#10164F] tracking-wider uppercase">
+              Support
             </h4>
-            <ul className="space-y-2.5 text-sm">
-              <li><Link href="#schedule-visit" className="hover:text-emerald-400 transition-colors">Schedule Physical Visits</Link></li>
-              <li><Link href="#rental-agreement" className="hover:text-emerald-400 transition-colors">Digital Rent Agreements</Link></li>
-              <li><Link href="#complaints" className="hover:text-emerald-400 transition-colors">Maintenance Ticketing</Link></li>
-              <li><Link href="#owners" className="hover:text-emerald-400 transition-colors">Owner Dashboard</Link></li>
+            <ul className="space-y-2 text-xs font-semibold">
+              <li>
+                <Link href="/contact" className="hover:text-[#3129C8] transition-colors">
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link href="/help" className="hover:text-[#3129C8] transition-colors">
+                  Help Centre
+                </Link>
+              </li>
+              <li>
+                <Link href="/help" className="hover:text-[#3129C8] transition-colors">
+                  Frequently Asked Questions
+                </Link>
+              </li>
+              <li>
+                <Link href="/welcome" className="hover:text-[#3129C8] transition-colors">
+                  Welcome Tour
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* Col 5: Contact & Support */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-white tracking-wider uppercase">
-              Contact & Support
+          {/* Col 5: Legal & Popular Cities */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold text-[#10164F] tracking-wider uppercase">
+              Legal &amp; Cities
             </h4>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-emerald-400" />
-                <span>{siteConfig.contact.email}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-emerald-400" />
-                <span>{siteConfig.contact.phone}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-emerald-400" />
-                <span>Bengaluru | Delhi NCR | Pune | Hyderabad</span>
-              </div>
-            </div>
+            <ul className="space-y-2 text-xs font-semibold">
+              <li>
+                <Link href="/privacy" className="hover:text-[#3129C8] transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="hover:text-[#3129C8] transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
+              <li className="pt-2 text-gray-400 font-normal">
+                Supported Hubs:
+              </li>
+              <li className="text-[11px] text-gray-500 font-normal">
+                Ranchi &bull; Dhanbad &bull; Jamshedpur &bull; Bokaro &bull; Hazaribagh
+              </li>
+            </ul>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-12 pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>© {new Date().getFullYear()} RoomSplits Inc. All rights reserved.</p>
-          <div className="flex items-center gap-1 text-slate-400">
-            <span>Crafted with</span>
-            <Heart className="h-3.5 w-3.5 text-rose-500 fill-rose-500" />
-            <span>for seamless urban living.</span>
+        <div className="mt-12 pt-6 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+          <p>© {new Date().getFullYear()} RoomSplits. Student Accommodation Discovery.</p>
+          <div className="flex items-center gap-6">
+            <Link href="/terms" className="hover:text-[#10164F] transition-colors">
+              Terms
+            </Link>
+            <Link href="/privacy" className="hover:text-[#10164F] transition-colors">
+              Privacy
+            </Link>
+            <span className="text-[#3129C8] font-bold flex items-center gap-1">
+              <MapPin className="w-3.5 h-3.5" /> Jharkhand, India
+            </span>
           </div>
         </div>
       </div>

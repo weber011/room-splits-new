@@ -26,9 +26,11 @@ export function NotificationBell() {
 
   const loadNotifications = async () => {
     try {
-      const data = await notificationService.getNotifications("u-101");
+      const [data, count] = await Promise.all([
+        notificationService.getNotifications(),
+        notificationService.getUnreadCount(),
+      ]);
       setNotifications(data);
-      const count = await notificationService.getUnreadCount("u-101");
       setUnreadCount(count);
     } catch (err) {
       console.error("Failed to load notifications", err);
@@ -38,6 +40,11 @@ export function NotificationBell() {
   useEffect(() => {
     loadNotifications();
 
+    // Periodic poll for unread count
+    const interval = setInterval(() => {
+      notificationService.getUnreadCount().then(setUnreadCount).catch(() => {});
+    }, 30000);
+
     // Close dropdown on outside click
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -45,7 +52,10 @@ export function NotificationBell() {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   const handleMarkAsRead = async (id: string) => {
@@ -54,26 +64,34 @@ export function NotificationBell() {
   };
 
   const handleMarkAllAsRead = async () => {
-    await notificationService.markAllAsRead("u-101");
+    await notificationService.markAllAsRead();
     await loadNotifications();
   };
 
-  const getNotificationIcon = (type: NotificationType) => {
-    switch (type) {
-      case "VISIT_CONFIRMED":
-      case "VISIT_RESCHEDULED":
+  const getNotificationIcon = (type: NotificationType | string) => {
+    const t = type.toLowerCase();
+    switch (t) {
+      case "visit_confirmed":
+      case "visit_rescheduled":
         return <CalendarCheck className="h-4 w-4 text-emerald-400" />;
-      case "BOOKING_CONFIRMED":
-        return <Building className="h-4 w-4 text-blue-400" />;
-      case "PAYMENT_SUCCESS":
-      case "RENT_DUE":
-        return <CreditCard className="h-4 w-4 text-emerald-400" />;
-      case "PAYMENT_FAILED":
+      case "visit_declined":
+      case "visit_cancelled":
         return <AlertCircle className="h-4 w-4 text-rose-400" />;
-      case "COMPLAINT_UPDATED":
+      case "visit_completed":
+        return <CalendarCheck className="h-4 w-4 text-purple-400" />;
+      case "visit_requested":
+        return <Building className="h-4 w-4 text-amber-400" />;
+      case "booking_confirmed":
+        return <Building className="h-4 w-4 text-blue-400" />;
+      case "payment_success":
+      case "rent_due":
+        return <CreditCard className="h-4 w-4 text-emerald-400" />;
+      case "payment_failed":
+        return <AlertCircle className="h-4 w-4 text-rose-400" />;
+      case "complaint_updated":
         return <Wrench className="h-4 w-4 text-amber-400" />;
-      case "DEPOSIT_SETTLEMENT":
-      case "CHECKOUT_UPDATED":
+      case "deposit_settlement":
+      case "checkout_updated":
         return <LogOut className="h-4 w-4 text-purple-400" />;
       default:
         return <Sparkles className="h-4 w-4 text-emerald-400" />;
@@ -81,11 +99,19 @@ export function NotificationBell() {
   };
 
   const getEntityLink = (notif: AppNotification) => {
+    const propId = notif.property_id || notif.propertyId;
+    if (propId) {
+      return `/property/${propId}`;
+    }
+    const visId = notif.visit_id || notif.visitId;
+    if (visId || notif.relatedEntity === "visit") {
+      return notif.type === "visit_requested" || notif.type === "visit_cancelled"
+        ? `/owner/visits`
+        : `/visits`;
+    }
     switch (notif.relatedEntity) {
       case "payment":
         return `/payments/${notif.relatedEntityId}`;
-      case "visit":
-        return `/visits/${notif.relatedEntityId}`;
       case "booking":
         return `/bookings/${notif.relatedEntityId}`;
       case "complaint":
@@ -103,13 +129,13 @@ export function NotificationBell() {
       {/* Bell Button */}
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors focus:outline-none"
+        className="relative p-2 rounded-xl text-slate-600 hover:text-[#10164F] hover:bg-slate-100 transition-colors focus:outline-none cursor-pointer"
         aria-label="Notifications"
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
           <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-extrabold text-white animate-pulse">
-            {unreadCount}
+            {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
       </button>

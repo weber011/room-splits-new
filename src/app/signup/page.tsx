@@ -1,177 +1,388 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import React, { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signUpAction } from "@/app/actions/auth.actions";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Alert } from "@/components/ui/alert";
-import { Building2, User, Loader2, ArrowRight } from "lucide-react";
+import {
+  Logo,
+  BrandButton,
+  BrandInput,
+  PasswordInput,
+  FormField,
+  GeometricDecorations,
+  AuthCard,
+  BrandErrorAlert,
+  BrandSuccessAlert,
+  BrandInfoAlert,
+} from "@/components/brand";
+import { RoleSelector, UserRoleType } from "@/components/auth/RoleSelector";
+import {
+  User,
+  Mail,
+  Phone,
+  ArrowRight,
+  ShieldCheck,
+} from "lucide-react";
 
 export default function SignupPage() {
   const router = useRouter();
 
-  const [role, setRole] = useState<"tenant" | "owner">("tenant");
-  const [errorMsg, setErrorMsg] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
+  // Role State
+  const [role, setRole] = useState<UserRoleType>("tenant");
+
+  // Form State
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isVerificationPending, setIsVerificationPending] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const handleSignup = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setErrorMsg("");
-    setSuccessMsg("");
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    // Clear specific field error on typing
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
+  };
 
-    const formData = new FormData(e.currentTarget);
-    formData.set("role", role);
+  const validateForm = () => {
+    const errors: { [key: string]: string } = {};
+
+    if (!formData.fullName.trim()) {
+      errors.fullName = "Please enter your full name.";
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = "Please enter your email address.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      errors.email = "Please enter a valid email address.";
+    }
+
+    if (formData.phone.trim() && !/^\+?[0-9]{10,14}$/.test(formData.phone.replace(/[\s-]/g, ""))) {
+      errors.phone = "Please enter a valid 10-digit mobile number.";
+    }
+
+    if (!formData.password) {
+      errors.password = "Please create a password.";
+    } else if (formData.password.length < 6) {
+      errors.password = "Password must be at least 6 characters long.";
+    }
+
+    // Confirm password validation (for students)
+    if (role === "tenant") {
+      if (!formData.confirmPassword) {
+        errors.confirmPassword = "Please confirm your password.";
+      } else if (formData.password !== formData.confirmPassword) {
+        errors.confirmPassword = "Passwords do not match.";
+      }
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsVerificationPending(false);
+
+    if (!validateForm()) {
+      return;
+    }
+
+    const payload = new FormData();
+    payload.set("fullName", formData.fullName.trim());
+    payload.set("email", formData.email.trim());
+    payload.set("phone", formData.phone.trim());
+    payload.set("password", formData.password);
+    payload.set("role", role);
+    if (role === "tenant") {
+      payload.set("confirmPassword", formData.confirmPassword);
+    }
 
     startTransition(async () => {
-      const res = await signUpAction(formData);
-      if (!res.success) {
-        setErrorMsg(res.message);
-      } else {
-        setSuccessMsg(res.message);
-        setTimeout(() => {
-          if (role === "owner") {
-            router.push("/owner/dashboard");
+      try {
+        const result = await signUpAction(payload);
+        if (!result.success) {
+          setErrorMessage(result.message);
+        } else {
+          setSuccessMessage(result.message);
+
+          // Check if message indicates verification pending
+          if (result.requiresVerification || result.message.toLowerCase().includes("verify your email")) {
+            setIsVerificationPending(true);
           } else {
-            router.push("/account");
+            // Redirect based on expressed intent: owners must complete onboarding, students go to dashboard
+            setTimeout(() => {
+              if (role === "owner") {
+                router.push("/owner/onboarding");
+              } else {
+                router.push("/student/dashboard");
+              }
+            }, 1200);
           }
-        }, 1200);
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "An unexpected error occurred during signup.";
+        setErrorMessage(msg);
       }
     });
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 py-12 relative overflow-hidden">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-radial-glow pointer-events-none opacity-60" />
+    <div className="relative min-h-screen bg-[#FAFAF7] text-[#1F2937] flex flex-col justify-between selection:bg-[#3129C8] selection:text-white">
+      {/* Decorative Geometric Shapes */}
+      <GeometricDecorations variant="auth" />
 
-      <div className="w-full max-w-md space-y-6 relative z-10">
-        <div className="text-center space-y-2">
-          <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-500/20">
-              <Building2 className="h-6 w-6" />
-            </div>
-            <span className="text-2xl font-bold tracking-tight text-white">
-              Room<span className="text-emerald-400">Splits</span>
-            </span>
+      {/* Top Header */}
+      <header className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-between">
+        <Logo size="md" href="/" />
+
+        <div className="flex items-center gap-2 text-xs font-semibold text-[#64748B]">
+          <span className="hidden sm:inline">Already registered?</span>
+          <Link
+            href="/login"
+            className="text-[#3129C8] hover:underline font-bold px-2 py-1 rounded-lg hover:bg-white/80"
+          >
+            Sign In →
           </Link>
-          <p className="text-xs text-slate-400">Create your account to discover PGs or list your property.</p>
         </div>
+      </header>
 
-        <Card className="border-slate-800 bg-slate-900/90 shadow-2xl backdrop-blur-xl">
-          <CardHeader className="space-y-4 text-center">
-            <CardTitle className="text-xl">Create Your Account</CardTitle>
-            <CardDescription className="text-xs">
-              Select your account type to get started
-            </CardDescription>
-
-            {/* Role Selection Toggle */}
-            <div className="grid grid-cols-2 gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setRole("tenant")}
-                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-semibold transition-all ${
-                  role === "tenant"
-                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-md"
-                    : "bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200"
-                }`}
-              >
-                <User className="h-4 w-4" />
-                Student / Resident
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole("owner")}
-                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-semibold transition-all ${
-                  role === "owner"
-                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-md"
-                    : "bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200"
-                }`}
-              >
-                <Building2 className="h-4 w-4" />
-                Property Owner
-              </button>
+      {/* Main Container */}
+      <main className="relative z-10 w-full max-w-xl mx-auto px-4 sm:px-6 py-6 sm:py-10 flex-1 flex flex-col justify-center">
+        <AuthCard>
+          {/* Header */}
+          <div className="text-center space-y-2 mb-6 sm:mb-8">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-50 text-[#3129C8] mb-1">
+              <User className="w-6 h-6" />
             </div>
-          </CardHeader>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#10164F] tracking-tight">
+              Create Your Account
+            </h1>
+            <p className="text-sm text-[#64748B]">
+              Join RoomSplits and find your perfect stay.
+            </p>
+          </div>
 
-          <CardContent className="space-y-4">
-            {errorMsg && <Alert variant="destructive">{errorMsg}</Alert>}
-            {successMsg && <Alert variant="success">{successMsg}</Alert>}
+          {/* Account Type Selector */}
+          <div className="space-y-2.5 mb-6">
+            <span className="text-xs font-bold text-[#10164F] tracking-tight uppercase">
+              Select Account Type
+            </span>
+            <RoleSelector
+              value={role}
+              onChange={setRole}
+              disabled={isPending}
+            />
+          </div>
 
-            <form onSubmit={handleSignup} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Full Name</label>
-                <Input
-                  name="fullName"
-                  placeholder="e.g. Aarav Sharma"
+          {/* Status Alerts */}
+          {errorMessage && (
+            <div className="mb-5">
+              <BrandErrorAlert title="Registration Notice">
+                {errorMessage}
+              </BrandErrorAlert>
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="mb-5">
+              <BrandSuccessAlert title="Welcome!">
+                {successMessage}
+              </BrandSuccessAlert>
+            </div>
+          )}
+
+          {isVerificationPending && (
+            <div className="mb-5">
+              <BrandInfoAlert title="Verification Email Dispatched">
+                We sent a confirmation link to <strong>{formData.email}</strong>.
+                Click the link in your email to activate your account, then sign in.
+              </BrandInfoAlert>
+            </div>
+          )}
+
+          {/* Sign Up Form */}
+          <form onSubmit={handleSubmit} noValidate className="space-y-4">
+            {/* Full Name */}
+            <FormField
+              id="fullName"
+              label="Full Name"
+              required
+              error={fieldErrors.fullName}
+            >
+              <BrandInput
+                id="fullName"
+                name="fullName"
+                placeholder={role === "owner" ? "e.g. Rajeshwar Sharma" : "e.g. Aarav Sharma"}
+                value={formData.fullName}
+                onChange={handleInputChange}
+                error={Boolean(fieldErrors.fullName)}
+                disabled={isPending}
+                leftIcon={<User className="w-4 h-4 text-slate-400" />}
+                required
+                autoComplete="name"
+              />
+            </FormField>
+
+            {/* Email Address */}
+            <FormField
+              id="email"
+              label="Email Address"
+              required
+              error={fieldErrors.email}
+            >
+              <BrandInput
+                id="email"
+                name="email"
+                type="email"
+                placeholder="name@example.com"
+                value={formData.email}
+                onChange={handleInputChange}
+                error={Boolean(fieldErrors.email)}
+                disabled={isPending}
+                leftIcon={<Mail className="w-4 h-4 text-slate-400" />}
+                required
+                autoComplete="email"
+              />
+            </FormField>
+
+            {/* Mobile Number */}
+            <FormField
+              id="phone"
+              label="Mobile Number"
+              hint={role === "owner" ? "Required for tenant visits" : "Optional (for visit updates)"}
+              required={role === "owner"}
+              error={fieldErrors.phone}
+            >
+              <BrandInput
+                id="phone"
+                name="phone"
+                type="tel"
+                placeholder="+91 98765 43210"
+                value={formData.phone}
+                onChange={handleInputChange}
+                error={Boolean(fieldErrors.phone)}
+                disabled={isPending}
+                leftIcon={<Phone className="w-4 h-4 text-slate-400" />}
+                autoComplete="tel"
+              />
+            </FormField>
+
+            {/* Create Password */}
+            <FormField
+              id="password"
+              label="Create Password"
+              hint="Min 6 characters"
+              required
+              error={fieldErrors.password}
+            >
+              <PasswordInput
+                id="password"
+                name="password"
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={handleInputChange}
+                error={Boolean(fieldErrors.password)}
+                disabled={isPending}
+                required
+                autoComplete="new-password"
+              />
+            </FormField>
+
+            {/* Confirm Password (Student Registration) */}
+            {role === "tenant" && (
+              <FormField
+                id="confirmPassword"
+                label="Confirm Password"
+                required
+                error={fieldErrors.confirmPassword}
+              >
+                <PasswordInput
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  placeholder="Re-enter password"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  error={Boolean(fieldErrors.confirmPassword)}
+                  disabled={isPending}
                   required
-                  disabled={isPending}
-                  className="bg-slate-950 border-slate-800"
+                  autoComplete="new-password"
                 />
+              </FormField>
+            )}
+
+            {/* PG Owner Note */}
+            {role === "owner" && (
+              <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200/80 text-[11px] text-amber-900 flex items-start gap-2">
+                <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                <span>
+                  Property photos, bed inventory, and address details will be collected
+                  during owner onboarding once your account is created.
+                </span>
               </div>
+            )}
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Email Address</label>
-                <Input
-                  name="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  required
-                  disabled={isPending}
-                  className="bg-slate-950 border-slate-800"
-                />
-              </div>
+            {/* Submit Button */}
+            <div className="pt-2">
+              <BrandButton
+                type="submit"
+                variant="primary"
+                size="lg"
+                fullWidth
+                isLoading={isPending}
+                loadingText="Creating Your Account..."
+                rightIcon={<ArrowRight className="w-4 h-4 ml-1" />}
+              >
+                Create Account →
+              </BrandButton>
+            </div>
+          </form>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Phone Number (Optional)</label>
-                <Input
-                  name="phone"
-                  type="tel"
-                  placeholder="+91 98765 43210"
-                  disabled={isPending}
-                  className="bg-slate-950 border-slate-800"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Password</label>
-                <Input
-                  name="password"
-                  type="password"
-                  placeholder="Min 6 characters"
-                  required
-                  minLength={6}
-                  disabled={isPending}
-                  className="bg-slate-950 border-slate-800"
-                />
-              </div>
-
-              <Button type="submit" className="w-full gap-2" size="lg" disabled={isPending}>
-                {isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Registering Account...
-                  </>
-                ) : (
-                  <>
-                    Create {role === "owner" ? "Owner Account" : "Student Account"}
-                    <ArrowRight className="h-4 w-4" />
-                  </>
-                )}
-              </Button>
-            </form>
-
-            <div className="text-center pt-4 border-t border-slate-800/80 text-xs text-slate-400">
-              Already have a RoomSplits account?{" "}
-              <Link href="/login" className="text-emerald-400 font-semibold hover:underline">
+          {/* Bottom Notice & Links */}
+          <div className="mt-6 text-center space-y-2 pt-4 border-t border-slate-100">
+            <p className="text-xs text-[#64748B]">
+              Already have an account?{" "}
+              <Link href="/login" className="font-bold text-[#3129C8] hover:underline">
                 Sign In
               </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </p>
+
+            <p className="text-[11px] text-slate-400">
+              By creating an account, you agree to RoomSplits&apos;{" "}
+              <Link href="/terms" className="underline hover:text-slate-600">
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link href="/privacy" className="underline hover:text-slate-600">
+                Privacy Policy
+              </Link>
+              .
+            </p>
+          </div>
+        </AuthCard>
+      </main>
+
+      {/* Footer Minimal */}
+      <footer className="relative z-10 w-full max-w-7xl mx-auto px-4 py-4 text-center text-[11px] text-[#64748B]">
+        RoomSplits • Jharkhand Student PG & Hostel Discovery Platform
+      </footer>
     </div>
   );
 }

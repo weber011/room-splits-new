@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { visitService } from "@/services/visit.service";
 import { Property } from "@/types";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CalendarCheck, Ticket } from "lucide-react";
+import { createVisitAction } from "@/app/actions/visit.actions";
+import { VisitTimeSlot } from "@/types/visit.types";
+import { CalendarCheck, Ticket, Loader2 } from "lucide-react";
 
 export interface VisitScheduleWidgetProps {
   property: Property;
@@ -14,89 +14,107 @@ export interface VisitScheduleWidgetProps {
 
 export function VisitScheduleWidget({ property }: VisitScheduleWidgetProps) {
   const router = useRouter();
-  const [date, setDate] = useState("2026-10-08");
-  const [timeSlot, setTimeSlot] = useState("Evening (05:00 PM - 07:00 PM)");
+  const todayStr = new Date().toISOString().split("T")[0];
+  const [date, setDate] = useState(todayStr);
+  const [timeSlot, setTimeSlot] = useState<VisitTimeSlot>("afternoon");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const fee = visitService.getVisitPassFee();
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleScheduleVisit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg(null);
     setIsSubmitting(true);
     try {
-      const pass = await visitService.createVisitPassRequest({
-        userId: "u-101",
-        userName: "Aditya Kumar",
-        userEmail: "aditya@example.com",
-        userPhone: "+91 98765 43210",
+      const res = await createVisitAction({
         propertyId: property.id,
-        propertyTitle: property.title,
-        locality: property.location.locality,
-        city: property.location.city,
-        coverImage: property.coverImage,
-        address: property.location.address,
         preferredDate: date,
-        preferredTime: timeSlot,
+        preferredTimeSlot: timeSlot,
       });
 
-      router.push(`/visits/checkout/${pass.id}`);
+      if (!res.success) {
+        setErrorMsg(res.error || "Failed to schedule visit.");
+        return;
+      }
+
+      router.push("/visits");
     } catch {
-      alert("Failed to create Visit Pass. Please try again.");
+      setErrorMsg("Failed to schedule visit. Please sign in as a student.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Card id="schedule-visit" className="border-slate-800 bg-slate-900/90 p-6 space-y-4 sticky top-24">
-      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+    <Card id="schedule-visit" className="rounded-3xl border border-[#10164F]/10 bg-white p-6 space-y-5 shadow-sm sticky top-24 text-[#10164F]">
+      <div className="flex items-center justify-between border-b border-[#10164F]/10 pb-4">
         <div>
-          <h4 className="font-bold text-white text-lg flex items-center gap-2">
-            <Ticket className="h-5 w-5 text-emerald-400" />
+          <h4 className="font-extrabold text-[#10164F] text-lg flex items-center gap-2">
+            <Ticket className="h-5 w-5 text-[#3129C8]" />
             <span>Schedule Physical Visit</span>
           </h4>
-          <p className="text-xs text-slate-400 mt-0.5">Verified visit pass includes direct owner contact & exact map pin.</p>
+          <p className="text-xs text-gray-500 mt-1">Verified visit pass includes direct host coordination &amp; room tour.</p>
         </div>
       </div>
 
+      {errorMsg && (
+        <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
+          {errorMsg}
+        </div>
+      )}
+
       <form onSubmit={handleScheduleVisit} className="space-y-4">
-        <div className="space-y-1">
-          <label className="text-xs text-slate-300 font-semibold">Select Preferred Date</label>
+        <div className="space-y-1.5">
+          <label className="text-xs text-[#10164F] font-bold">Select Preferred Date</label>
           <input
             type="date"
+            min={todayStr}
             value={date}
             onChange={(e) => setDate(e.target.value)}
             required
-            className="w-full h-11 rounded-xl bg-slate-950 border border-slate-800 px-3 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-emerald-500/50"
+            className="w-full h-11 rounded-xl bg-white border border-[#10164F]/15 px-3 text-sm text-[#10164F] outline-none focus:border-[#3129C8] focus:ring-1 focus:ring-[#3129C8]"
           />
         </div>
 
-        <div className="space-y-1">
-          <label className="text-xs text-slate-300 font-semibold">Select Time Slot</label>
+        <div className="space-y-1.5">
+          <label className="text-xs text-[#10164F] font-bold">Select Time Slot</label>
           <select
             value={timeSlot}
-            onChange={(e) => setTimeSlot(e.target.value)}
-            className="w-full h-11 rounded-xl bg-slate-950 border border-slate-800 px-3 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-emerald-500/50"
+            onChange={(e) => setTimeSlot(e.target.value as VisitTimeSlot)}
+            className="w-full h-11 rounded-xl bg-white border border-[#10164F]/15 px-3 text-sm text-[#10164F] outline-none focus:border-[#3129C8] focus:ring-1 focus:ring-[#3129C8]"
           >
-            <option value="Morning (10:00 AM - 12:00 PM)">Morning (10:00 AM - 12:00 PM)</option>
-            <option value="Afternoon (02:00 PM - 04:00 PM)">Afternoon (02:00 PM - 04:00 PM)</option>
-            <option value="Evening (05:00 PM - 07:00 PM)">Evening (05:00 PM - 07:00 PM)</option>
+            <option value="morning">Morning (10:00 AM - 12:00 PM)</option>
+            <option value="afternoon">Afternoon (02:00 PM - 04:00 PM)</option>
+            <option value="evening">Evening (05:00 PM - 07:00 PM)</option>
           </select>
         </div>
 
-        {/* Configurable Fee Banner */}
-        <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between">
+        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
           <div>
-            <span className="text-xs text-slate-300 block">Visit Pass Token Fee</span>
-            <span className="text-[10px] text-slate-400">100% Refundable on Move-in</span>
+            <span className="text-xs text-emerald-900 font-bold block">In-Person Room Tour</span>
+            <span className="text-[11px] text-emerald-700">100% Free • No Brokerage</span>
           </div>
-          <strong className="text-lg font-bold text-emerald-400">₹{fee}</strong>
+          <strong className="text-sm font-black text-emerald-800 bg-white px-2.5 py-1 rounded-full uppercase border border-emerald-200">
+            Free
+          </strong>
         </div>
 
-        <Button type="submit" disabled={isSubmitting} className="w-full gap-2" size="lg">
-          <CalendarCheck className="h-4 w-4" />
-          Get Visit Pass (₹{fee})
-        </Button>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full h-12 rounded-2xl bg-[#3129C8] hover:bg-[#251fa3] text-white font-extrabold flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer disabled:opacity-50"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Scheduling...</span>
+            </>
+          ) : (
+            <>
+              <CalendarCheck className="h-4 w-4" />
+              <span>Schedule Free Visit</span>
+            </>
+          )}
+        </button>
       </form>
     </Card>
   );

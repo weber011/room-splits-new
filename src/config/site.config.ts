@@ -21,10 +21,10 @@ export const siteConfig = {
     platformCommissionPercent: 5,
   },
   navLinks: [
-    { name: "Explore PGs & Rooms", href: "#properties" },
-    { name: "How It Works", href: "#how-it-works" },
-    { name: "For Owners", href: "#owners" },
-    { name: "Pricing & Plans", href: "#pricing" },
+    { name: "Discover PGs", href: "/discover" },
+    { name: "Welcome Screen", href: "/welcome" },
+    { name: "Resident Stays", href: "/account" },
+    { name: "PG Owners", href: "/owner/dashboard" },
   ],
   propertyTypes: [
     { id: "pg", label: "Paying Guest (PG)" },

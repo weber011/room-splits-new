@@ -1,171 +1,279 @@
 "use client";
 
-import { useState, useTransition, Suspense } from "react";
+import React, { useState, useTransition, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signInAction } from "@/app/actions/auth.actions";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Alert } from "@/components/ui/alert";
-import { Tabs } from "@/components/ui/tabs";
-import { Building2, Shield, User, Loader2, ArrowRight } from "lucide-react";
+import {
+  Logo,
+  BrandButton,
+  BrandInput,
+  PasswordInput,
+  FormField,
+  GeometricDecorations,
+  AuthCard,
+  BrandErrorAlert,
+  BrandSuccessAlert,
+} from "@/components/brand";
+import {
+  Mail,
+  Home,
+  ArrowRight,
+  Loader2,
+  KeyRound,
+} from "lucide-react";
 
 function LoginFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") || "/";
+  const redirectTo = searchParams.get("redirectTo") || "/discover";
 
-  const [activeRole, setActiveRole] = useState("tenant");
-  const [errorMsg, setErrorMsg] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
+  const [emailOrPhone, setEmailOrPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
   const [isPending, startTransition] = useTransition();
+
+  const validate = () => {
+    const errors: { [key: string]: string } = {};
+    if (!emailOrPhone.trim()) {
+      errors.emailOrPhone = "Please enter your registered email address or mobile number.";
+    }
+    if (!password) {
+      errors.password = "Please enter your password.";
+    }
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setErrorMsg("");
-    setSuccessMsg("");
+    setErrorMessage("");
+    setSuccessMessage("");
 
-    const formData = new FormData(e.currentTarget);
-    formData.set("role", activeRole);
+    if (!validate()) return;
+
+    const payload = new FormData();
+    payload.set("email", emailOrPhone.trim());
+    payload.set("password", password);
 
     startTransition(async () => {
-      const res = await signInAction(formData);
-      if (!res.success) {
-        setErrorMsg(res.message);
-      } else {
-        setSuccessMsg(res.message);
-        setTimeout(() => {
-          if (activeRole === "admin") {
-            router.push("/admin/dashboard");
-          } else if (activeRole === "owner") {
-            router.push("/owner/dashboard");
-          } else {
-            router.push(redirectTo);
-          }
-        }, 500);
+      try {
+        const res = await signInAction(payload);
+        if (!res.success) {
+          setErrorMessage(res.message);
+        } else {
+          setSuccessMessage(res.message);
+
+          // Route according to server-verified user role and sanitized target
+          setTimeout(() => {
+            const role = res.user?.role;
+            const hasOwner = !!res.user?.ownerId || role === "owner";
+            const safeRedirect =
+              redirectTo &&
+              redirectTo.startsWith("/") &&
+              !redirectTo.startsWith("//") &&
+              !redirectTo.includes("://") &&
+              redirectTo !== "/login"
+                ? redirectTo
+                : null;
+
+            if (safeRedirect) {
+              router.push(safeRedirect);
+            } else if (role === "admin") {
+              router.push("/admin/dashboard");
+            } else if (hasOwner) {
+              router.push("/owner/dashboard");
+            } else {
+              router.push("/student/dashboard");
+            }
+          }, 600);
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Failed to sign in. Please verify your credentials.";
+        setErrorMessage(msg);
       }
     });
   };
 
   return (
-    <Card className="border-slate-800 bg-slate-900/90 shadow-2xl backdrop-blur-xl">
-      <CardHeader className="space-y-4">
-        <div className="flex justify-center">
-          <Tabs
-            tabs={[
-              { id: "tenant", label: "Student / Resident", icon: User },
-              { id: "owner", label: "Property Owner", icon: Building2 },
-              { id: "admin", label: "Admin", icon: Shield },
-            ]}
-            activeTab={activeRole}
-            onChange={setActiveRole}
+    <AuthCard>
+      {/* Header with Small Accommodation Illustration Badge */}
+      <div className="text-center space-y-2 mb-6 sm:mb-8">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 text-[#3129C8] mb-1 shadow-sm">
+          <div className="relative">
+            <Home className="w-7 h-7 text-[#10164F]" />
+            <KeyRound className="w-3.5 h-3.5 text-[#3129C8] absolute -bottom-1 -right-1" />
+          </div>
+        </div>
+
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#10164F] tracking-tight">
+          Sign In to RoomSplits
+        </h1>
+        <p className="text-sm text-[#64748B]">
+          Find, save and manage your perfect stay.
+        </p>
+      </div>
+
+      {/* Status Alerts */}
+      {errorMessage && (
+        <div className="mb-5">
+          <BrandErrorAlert title="Authentication Error">
+            {errorMessage}
+          </BrandErrorAlert>
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="mb-5">
+          <BrandSuccessAlert title="Authenticated">
+            {successMessage}
+          </BrandSuccessAlert>
+        </div>
+      )}
+
+      {/* Form */}
+      <form onSubmit={handleLogin} noValidate className="space-y-4">
+        {/* Email or Phone */}
+        <FormField
+          id="emailOrPhone"
+          label="Email Address or Mobile Number"
+          required
+          error={fieldErrors.emailOrPhone}
+        >
+          <BrandInput
+            id="emailOrPhone"
+            name="emailOrPhone"
+            placeholder="name@example.com or 10-digit number"
+            value={emailOrPhone}
+            onChange={(e) => {
+              setEmailOrPhone(e.target.value);
+              if (fieldErrors.emailOrPhone) {
+                setFieldErrors((prev) => {
+                  const copy = { ...prev };
+                  delete copy.emailOrPhone;
+                  return copy;
+                });
+              }
+            }}
+            error={Boolean(fieldErrors.emailOrPhone)}
+            disabled={isPending}
+            leftIcon={<Mail className="w-4 h-4 text-slate-400" />}
+            required
+            autoComplete="username"
           />
-        </div>
-        <div className="text-center pt-2">
-          <CardTitle className="text-xl">
-            {activeRole === "admin"
-              ? "Admin Super Portal Login"
-              : activeRole === "owner"
-              ? "Property Owner Dashboard Login"
-              : "Resident & Student Login"}
-          </CardTitle>
-          <CardDescription className="text-xs">
-            Enter your registered credentials below
-          </CardDescription>
-        </div>
-      </CardHeader>
+        </FormField>
 
-      <CardContent className="space-y-4">
-        {errorMsg && <Alert variant="destructive">{errorMsg}</Alert>}
-        {successMsg && <Alert variant="success">{successMsg}</Alert>}
+        {/* Password */}
+        <FormField
+          id="password"
+          label="Password"
+          required
+          error={fieldErrors.password}
+        >
+          <PasswordInput
+            id="password"
+            name="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (fieldErrors.password) {
+                setFieldErrors((prev) => {
+                  const copy = { ...prev };
+                  delete copy.password;
+                  return copy;
+                });
+              }
+            }}
+            error={Boolean(fieldErrors.password)}
+            disabled={isPending}
+            required
+            autoComplete="current-password"
+          />
+        </FormField>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-300">Email Address</label>
-            <Input
-              name="email"
-              type="email"
-              placeholder="name@example.com"
-              required
-              disabled={isPending}
-              className="bg-slate-950 border-slate-800"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-300">Password</label>
-              <Link
-                href="/forgot-password"
-                className="text-xs text-emerald-400 hover:underline"
-              >
-                Forgot password?
-              </Link>
-            </div>
-            <Input
-              name="password"
-              type="password"
-              placeholder="••••••••"
-              required
-              disabled={isPending}
-              className="bg-slate-950 border-slate-800"
-            />
-          </div>
-
-          <Button type="submit" className="w-full gap-2" size="lg" disabled={isPending}>
-            {isPending ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Authenticating...
-              </>
-            ) : (
-              <>
-                Sign In
-                <ArrowRight className="h-4 w-4" />
-              </>
-            )}
-          </Button>
-        </form>
-
-        <div className="text-center pt-4 border-t border-slate-800/80 text-xs text-slate-400">
-          Don&apos;t have a RoomSplits account?{" "}
-          <Link href="/signup" className="text-emerald-400 font-semibold hover:underline">
-            Create an Account
+        {/* Forgot Password Link */}
+        <div className="flex items-center justify-end pt-0.5">
+          <Link
+            href="/forgot-password"
+            className="text-xs font-bold text-[#3129C8] hover:underline transition-colors"
+          >
+            Forgot Password?
           </Link>
         </div>
-      </CardContent>
-    </Card>
+
+        {/* Primary Sign In Button */}
+        <div className="pt-2">
+          <BrandButton
+            type="submit"
+            variant="primary"
+            size="lg"
+            fullWidth
+            isLoading={isPending}
+            loadingText="Signing In..."
+            rightIcon={<ArrowRight className="w-4 h-4 ml-1" />}
+          >
+            Sign In →
+          </BrandButton>
+        </div>
+      </form>
+
+      {/* Bottom Link: Don't have an account? Sign Up */}
+      <div className="mt-6 text-center pt-4 border-t border-slate-100">
+        <p className="text-xs text-[#64748B]">
+          Don&apos;t have an account?{" "}
+          <Link href="/signup" className="font-bold text-[#3129C8] hover:underline">
+            Sign Up
+          </Link>
+        </p>
+      </div>
+    </AuthCard>
   );
 }
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 py-12 relative overflow-hidden">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-radial-glow pointer-events-none opacity-60" />
+    <div className="relative min-h-screen bg-[#FAFAF7] text-[#1F2937] flex flex-col justify-between selection:bg-[#3129C8] selection:text-white">
+      {/* Decorative Geometric Shapes */}
+      <GeometricDecorations variant="auth" />
 
-      <div className="w-full max-w-md space-y-6 relative z-10">
-        <div className="text-center space-y-2">
-          <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-500/20">
-              <Building2 className="h-6 w-6" />
-            </div>
-            <span className="text-2xl font-bold tracking-tight text-white">
-              Room<span className="text-emerald-400">Splits</span>
-            </span>
+      {/* Top Header */}
+      <header className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-between">
+        <Logo size="md" href="/" />
+
+        <div className="flex items-center gap-2 text-xs font-semibold text-[#64748B]">
+          <span className="hidden sm:inline">Need an account?</span>
+          <Link
+            href="/signup"
+            className="text-[#3129C8] hover:underline font-bold px-2 py-1 rounded-lg hover:bg-white/80"
+          >
+            Register Here →
           </Link>
-          <p className="text-xs text-slate-400">Sign in to your account to manage visits, stays, and rent.</p>
         </div>
+      </header>
 
-        <Suspense fallback={
-          <div className="p-8 text-center text-slate-400 glass-panel rounded-3xl">
-            <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-emerald-400" />
-            Loading authentication form...
-          </div>
-        }>
+      {/* Main Form Content */}
+      <main className="relative z-10 w-full max-w-md mx-auto px-4 sm:px-6 py-6 sm:py-10 flex-1 flex flex-col justify-center">
+        <Suspense
+          fallback={
+            <div className="bg-white rounded-3xl p-10 text-center shadow-md border border-slate-100">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#3129C8] mb-3" />
+              <p className="text-xs text-slate-500 font-medium">
+                Loading sign in portal...
+              </p>
+            </div>
+          }
+        >
           <LoginFormContent />
         </Suspense>
-      </div>
+      </main>
+
+      {/* Footer Minimal */}
+      <footer className="relative z-10 w-full max-w-7xl mx-auto px-4 py-4 text-center text-[11px] text-[#64748B]">
+        RoomSplits • Jharkhand Student Accommodation Network
+      </footer>
     </div>
   );
 }

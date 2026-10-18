@@ -1,44 +1,27 @@
 import { Metadata } from "next";
-import { propertyService } from "@/services/property.service";
-import { getAuthenticatedUser } from "@/lib/auth-helpers";
-import { PLATFORM_SETTINGS } from "@/config/business-rules.config";
-import {
-  PropertyImageGallery,
-  PriceDisplay,
-  AmenityBadge,
-  VerifiedBadge,
-  RoomCard,
-  ReviewCard,
-  VisitScheduleWidget,
-  PropertyMap,
-  PropertyUnlockButton,
-} from "@/components/common";
-import { VisitRequestSection } from "@/components/common/VisitRequestSection";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import {
-  MapPin,
-  CalendarCheck,
-  CheckCircle2,
-  User,
-  Star,
-  Phone,
-  MessageSquare,
-  Building,
-} from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { propertyService } from "@/services/property.service";
+import { PropertyImageGallery } from "@/components/common/PropertyImageGallery";
+import { PriceDisplay } from "@/components/common/PriceDisplay";
+import { AmenityBadge } from "@/components/common/AmenityBadge";
+import { Card } from "@/components/ui/card";
+import { RoomSelectionSection } from "@/components/property/RoomSelectionSection";
+import { PropertyDetailHeaderActions } from "@/components/property/PropertyDetailHeaderActions";
+import { PropertyActionSidebar } from "@/components/property/PropertyActionSidebar";
+import {
+  MapPin,
+  CheckCircle2,
+  ArrowLeft,
+} from "lucide-react";
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
   const resolvedParams = await params;
-  const authUser = await getAuthenticatedUser();
-  const property = await propertyService.getPropertyById(
-    resolvedParams.id,
-    authUser?.id,
-    authUser?.role,
-    authUser?.ownerId
-  );
+  const property = await propertyService.getPropertyById(resolvedParams.id);
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://roomsplits.com";
 
   if (!property) {
@@ -49,9 +32,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
 
   const title = `${property.title} - ${property.category.toUpperCase()} in ${property.location.locality}, ${property.location.city} | RoomSplits`;
-  const description = `${property.description.slice(0, 160)}... Starting at ₹${property.startingPrice.toLocaleString("en-IN")}/mo. Verified PG & Co-Living in ${property.location.city}.`;
+  const description = `${property.description.slice(0, 160)}... Starting at ₹${property.startingPrice.toLocaleString("en-IN")}/mo. Student PG & hostel in ${property.location.city}.`;
   const propertyUrl = `${baseUrl}/property/${property.id}`;
-  const ogImage = property.coverImage || property.images[0] || `${baseUrl}/og-image.jpg`;
+  const ogImage =
+    property.coverImage || property.images[0] || `${baseUrl}/og-image.jpg`;
 
   return {
     title,
@@ -61,7 +45,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       `${property.category} in ${property.location.city}`,
       `${property.category} in ${property.location.locality}`,
       `PG for ${property.genderPolicy}`,
-      "RoomSplits verified PG",
+      "RoomSplits student accommodation",
     ],
     openGraph: {
       title,
@@ -87,52 +71,19 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   };
 }
 
-export default async function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function PropertyDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const resolvedParams = await params;
-  const authUser = await getAuthenticatedUser();
-  const property = await propertyService.getPropertyById(
-    resolvedParams.id,
-    authUser?.id,
-    authUser?.role,
-    authUser?.ownerId
-  );
+  const property = await propertyService.getPropertyById(resolvedParams.id);
 
   if (!property) {
     notFound();
   }
 
-  const sampleReviews = [
-    {
-      id: "rev-1",
-      propertyId: property.id,
-      tenantId: "t-1",
-      tenantName: "Ananya Roy",
-      rating: 4.9,
-      cleanlinessRating: 5,
-      foodRating: 4.8,
-      amenitiesRating: 5,
-      valueForMoneyRating: 4.9,
-      comment: "Gourmet daily food quality and super fast WiFi for remote software work!",
-      isVerifiedResident: true,
-      createdAt: "3 days ago",
-    },
-    {
-      id: "rev-2",
-      propertyId: property.id,
-      tenantId: "t-2",
-      tenantName: "Vikram Malhotra",
-      rating: 4.8,
-      cleanlinessRating: 4.9,
-      foodRating: 4.7,
-      amenitiesRating: 5,
-      valueForMoneyRating: 4.8,
-      comment: "Spacious rooms with daily housekeeping. Quiet and safe location.",
-      isVerifiedResident: true,
-      createdAt: "1 week ago",
-    },
-  ];
-
-  // PUBLIC JSON-LD STRUCTURED DATA (Omitted exact address, coordinates, or owner phone)
+  // JSON-LD Structured Data
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "SingleFamilyResidence",
@@ -146,275 +97,239 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
       postalCode: property.location.pincode,
       addressCountry: "IN",
     },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: property.rating,
-      reviewCount: property.reviewCount,
-    },
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8 pb-20">
+    <div className="min-h-screen bg-[#FAFAF7] text-[#1F2937] py-6 sm:py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8 pb-24 selection:bg-[#3129C8] selection:text-white">
       {/* JSON-LD Structured Data */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* Header Info */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <VerifiedBadge type="property" />
-            <Badge variant="secondary" className="uppercase text-[10px]">{property.genderPolicy}</Badge>
-            <Badge variant="outline" className="capitalize text-[10px]">{property.category}</Badge>
+      {/* Top Navigation & Breadcrumbs */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[#64748B]">
+        <Link
+          href="/discover"
+          className="inline-flex items-center gap-1.5 font-bold text-[#3129C8] hover:underline"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Discover PGs</span>
+        </Link>
+
+        <nav className="flex items-center gap-1.5 text-xs text-slate-500 overflow-x-auto">
+          <Link href="/" className="hover:text-[#3129C8]">
+            Home
+          </Link>
+          <span>/</span>
+          <Link href="/discover" className="hover:text-[#3129C8]">
+            Discover
+          </Link>
+          <span>/</span>
+          <Link
+            href={`/discover?city=${encodeURIComponent(property.location.city)}`}
+            className="hover:text-[#3129C8]"
+          >
+            {property.location.city}
+          </Link>
+          <span>/</span>
+          <span className="text-[#10164F] font-bold truncate max-w-xs">
+            {property.title}
+          </span>
+        </nav>
+      </div>
+
+      {/* Header Info: Title, Badges, Pricing & Actions */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-200/80 pb-6">
+        <div className="space-y-3">
+          {/* Badges */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {property.verified ? (
+              <span className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
+                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                <span>Verified PG</span>
+              </span>
+            ) : property.id.startsWith("prop-") ? (
+              <span className="bg-[#FFF45C] text-[#10164F] text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow-2xs">
+                Demo Listing
+              </span>
+            ) : (
+              <span className="bg-indigo-50 border border-indigo-200 text-[#3129C8] text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-2xs">
+                Active Listing
+              </span>
+            )}
+
+            <span className="bg-white border border-slate-200 text-[#10164F] text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-2xs">
+              {property.genderPolicy === "boys"
+                ? "Boys Only"
+                : property.genderPolicy === "girls"
+                ? "Girls Only"
+                : "Co-Ed Stay"}
+            </span>
+
+            <span className="bg-indigo-50 border border-indigo-100 text-[#3129C8] text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full">
+              {property.category.toUpperCase()}
+            </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">{property.title}</h1>
-          <p className="text-sm text-slate-400 flex items-center gap-1">
-            <MapPin className="h-4 w-4 text-emerald-400 shrink-0" />
+
+          {/* Title */}
+          <h1 className="text-2xl sm:text-4xl font-black text-[#10164F] tracking-tight">
+            {property.title}
+          </h1>
+
+          {/* Location */}
+          <p className="text-xs sm:text-sm text-[#64748B] flex items-center gap-1.5 font-medium">
+            <MapPin className="h-4 w-4 text-[#3129C8] shrink-0" />
             <span>
-              {property.isUnlocked
-                ? `${property.location.address}, ${property.location.locality}, ${property.location.city} - ${property.location.pincode}`
-                : `${property.location.locality}, ${property.location.city} - ${property.location.pincode}`}
+              {property.location.locality}, {property.location.city}
+              {property.location.state ? `, ${property.location.state}` : ""}
+              {property.location.pincode ? ` - ${property.location.pincode}` : ""}
             </span>
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
-          <PriceDisplay amount={property.startingPrice} size="lg" />
-          <div className="flex gap-2">
-            <Link href="#schedule-visit">
-              <Button variant="outline" size="lg" className="gap-2">
-                <CalendarCheck className="h-4 w-4 text-emerald-400" />
-                Schedule Visit
-              </Button>
-            </Link>
-            <Link href="#room-options">
-              <Button size="lg" className="gap-2">
-                Book Room
-              </Button>
-            </Link>
+        {/* Header Right: Price & Interactive Actions (Save & Share) */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 shrink-0">
+          <div>
+            <PriceDisplay amount={property.startingPrice} size="lg" />
+            <span className="text-[10px] text-slate-400 block -mt-1 font-medium">
+              Sample Demo Rent &bull; Zero Brokerage
+            </span>
           </div>
+
+          <PropertyDetailHeaderActions
+            propertyTitle={property.title}
+            propertyId={property.id}
+          />
         </div>
       </div>
 
-      {/* Property Access Control Banner */}
-      <PropertyUnlockButton
-        propertyId={property.id}
-        propertyTitle={property.title}
-        isUnlocked={Boolean(property.isUnlocked)}
-        isLoggedIn={Boolean(authUser)}
-        variant="banner"
+      {/* Photo Gallery Component */}
+      <PropertyImageGallery
+        images={property.images}
+        title={property.title}
       />
-      {property.isUnlocked && property.ownerContact?.phone && (
-        <Card className="p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 font-bold text-emerald-300 text-sm">
-              <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-              <span>✓ Property Unlocked ({PLATFORM_SETTINGS.VISIT_PASS_LABEL}) &bull; Full Details &amp; Contact Active</span>
-            </div>
-            <p className="text-[11px] text-slate-300">
-              {PLATFORM_SETTINGS.UNLOCK_PRICE_LABEL} unlock gives you access to property details and visit information. It does not reserve or book a room.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <a href={`tel:${property.ownerContact.phone}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 font-mono font-bold hover:bg-emerald-500/30">
-              <Phone className="h-3.5 w-3.5" />
-              <span>{property.ownerContact.phone}</span>
-            </a>
-            {property.ownerContact?.whatsapp && (
-              <a
-                href={`https://wa.me/${property.ownerContact.whatsapp.replace(/[^0-9]/g, "")}`}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold hover:bg-emerald-400"
-              >
-                <MessageSquare className="h-3.5 w-3.5" />
-                <span>WhatsApp</span>
-              </a>
-            )}
-          </div>
-        </Card>
-      )}
 
-      {/* Image Gallery */}
-      <PropertyImageGallery images={property.images} title={property.title} />
-
-      {/* Grid Layout: Main Details vs Right Sidebar */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Details */}
+      {/* Main Grid: 2 Columns (Content Details vs Right Sticky Sidebar) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-2">
+        {/* Left Column: Details & Information */}
         <div className="lg:col-span-2 space-y-10">
-          {/* Description */}
+          {/* About the Property */}
           <section className="space-y-3">
-            <h3 className="text-xl font-bold text-white">About the Property</h3>
-            <p className="text-sm text-slate-300 leading-relaxed font-normal">
+            <h3 className="text-xl sm:text-2xl font-black text-[#10164F]">
+              About the Accommodation
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-normal bg-white p-6 rounded-3xl border border-slate-200/90 shadow-2xs">
               {property.description}
             </p>
           </section>
 
-          {/* Room Sharing Options */}
-          <section id="room-options" className="space-y-4">
-            <h3 className="text-xl font-bold text-white">Room Sharing Options &amp; Monthly Rent</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {property.roomOptions.length > 0 ? (
-                property.roomOptions.map((room) => (
-                  <RoomCard key={room.id} room={room} />
-                ))
-              ) : (
-                <>
-                  <RoomCard
-                    room={{
-                      id: "r-single",
-                      sharingType: "single",
-                      monthlyRent: property.startingPrice * 1.4,
-                      securityDeposit: property.startingPrice * 2.8,
-                      availableBeds: 1,
-                      totalBeds: 2,
-                      hasAttachedBathroom: true,
-                      hasBalcony: true,
-                    }}
-                  />
-                  <RoomCard
-                    room={{
-                      id: "r-double",
-                      sharingType: "double",
-                      monthlyRent: property.startingPrice,
-                      securityDeposit: property.startingPrice * 2,
-                      availableBeds: 3,
-                      totalBeds: 6,
-                      hasAttachedBathroom: true,
-                      hasBalcony: false,
-                    }}
-                  />
-                </>
-              )}
-            </div>
-          </section>
+          {/* Interactive Room Selection Section */}
+          <RoomSelectionSection
+            roomOptions={property.roomOptions}
+            startingPrice={property.startingPrice}
+          />
 
-          {/* Amenities */}
+          {/* Amenities & Services */}
           <section className="space-y-3">
-            <h3 className="text-xl font-bold text-white">Included Amenities &amp; Services</h3>
-            <div className="flex flex-wrap gap-2">
-              {property.amenities.map((amenity) => (
-                <AmenityBadge key={amenity} name={amenity} showIcon />
-              ))}
-            </div>
-          </section>
-
-          {/* Property Rules */}
-          <section className="space-y-3">
-            <h3 className="text-xl font-bold text-white">House Rules &amp; Terms</h3>
-            <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-2 text-xs text-slate-300">
-              <div className="flex justify-between border-b border-slate-800 pb-2">
-                <span>Lock-in Period</span>
-                <strong className="text-white">{property.lockInMonths} Months</strong>
-              </div>
-              <div className="flex justify-between border-b border-slate-800 pb-2">
-                <span>Notice Period</span>
-                <strong className="text-white">{property.noticePeriodDays} Days</strong>
-              </div>
-              <ul className="space-y-1.5 pt-2">
-                {property.rules.map((rule, idx) => (
-                  <li key={idx} className="flex items-center gap-2">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                    <span>{rule}</span>
-                  </li>
+            <h3 className="text-xl sm:text-2xl font-black text-[#10164F]">
+              Included Amenities &amp; Facilities
+            </h3>
+            <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-2xs space-y-3">
+              <div className="flex flex-wrap gap-2.5">
+                {property.amenities.map((amenity) => (
+                  <AmenityBadge key={amenity} name={amenity} showIcon />
                 ))}
-              </ul>
+              </div>
+              <p className="text-[11px] text-slate-400 pt-1">
+                All amenities listed are standard demo inclusions verified for this sample accommodation.
+              </p>
             </div>
           </section>
 
-          {/* Private Visit Instructions (Unlocked Only) */}
-          {property.isUnlocked && property.ownerContact?.visitInstructions && (
-            <section className="space-y-3">
-              <h3 className="text-xl font-bold text-white">Private Visit Instructions</h3>
-              <Card className="p-5 bg-slate-900 border border-slate-800 space-y-2 text-xs text-slate-300">
-                <div className="flex items-center gap-2 font-bold text-white text-sm">
-                  <Building className="h-4 w-4 text-emerald-400" />
-                  <span>Host Access Note</span>
+          {/* House Rules & Stay Terms */}
+          <section className="space-y-3">
+            <h3 className="text-xl sm:text-2xl font-black text-[#10164F]">
+              House Rules &amp; Stay Terms
+            </h3>
+            <div className="bg-white p-6 rounded-3xl border border-slate-200/90 space-y-3 text-xs text-slate-700 shadow-2xs">
+              <div className="grid grid-cols-2 gap-4 border-b border-slate-100 pb-3">
+                <div>
+                  <span className="font-semibold text-slate-500 block text-[11px]">
+                    Lock-in Period
+                  </span>
+                  <strong className="text-[#10164F] font-black text-sm">
+                    {property.lockInMonths} Months
+                  </strong>
                 </div>
-                <p className="leading-relaxed">
-                  {property.ownerContact.visitInstructions}
-                </p>
-              </Card>
-            </section>
-          )}
+                <div>
+                  <span className="font-semibold text-slate-500 block text-[11px]">
+                    Notice Period
+                  </span>
+                  <strong className="text-[#10164F] font-black text-sm">
+                    {property.noticePeriodDays} Days
+                  </strong>
+                </div>
+              </div>
 
-          {/* Request Visit Section */}
-          <section className="space-y-3">
-            <VisitRequestSection
-              propertyId={property.id}
-              propertyTitle={property.title}
-              isUnlocked={Boolean(property.isUnlocked)}
-              isLoggedIn={Boolean(authUser)}
-            />
-          </section>
-
-          {/* Map Section */}
-          <section className="space-y-3">
-            <PropertyMap
-              title={property.title}
-              location={{
-                latitude: property.isUnlocked ? property.location.latitude : undefined,
-                longitude: property.isUnlocked ? property.location.longitude : undefined,
-                formatted_address: property.isUnlocked
-                  ? `${property.location.address}, ${property.location.locality}, ${property.location.city}`
-                  : `Approximate Locality (${property.location.locality}, ${property.location.city})`,
-                city: property.location.city,
-                state: property.location.state || "Jharkhand",
-                pincode: property.location.pincode,
-              }}
-              isExactLocationVisible={Boolean(property.isUnlocked)}
-            />
-          </section>
-
-          {/* Reviews Section */}
-          <section className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-white">Resident Reviews</h3>
-              <div className="flex items-center gap-1 text-amber-400 font-bold text-sm">
-                <Star className="h-4 w-4 fill-amber-400" />
-                <span>{property.rating} ({property.reviewCount} reviews)</span>
+              <div className="space-y-2 pt-1">
+                <span className="text-[10px] font-black uppercase tracking-wider text-[#64748B] block">
+                  Property Guidelines
+                </span>
+                <ul className="space-y-2 text-xs">
+                  {property.rules.map((rule, idx) => (
+                    <li key={idx} className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-[#3129C8] shrink-0" />
+                      <span>{rule}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {sampleReviews.map((rev) => (
-                <ReviewCard key={rev.id} review={rev} />
-              ))}
-            </div>
+          </section>
+
+          {/* Neighborhood & Locality Card */}
+          <section className="space-y-3">
+            <h3 className="text-xl sm:text-2xl font-black text-[#10164F]">
+              Locality &amp; Campus Proximity
+            </h3>
+            <Card className="p-6 rounded-3xl bg-white border border-slate-200/90 space-y-4 shadow-2xs text-left">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-[#3129C8]" />
+                <h4 className="font-extrabold text-[#10164F] text-base">
+                  {property.location.locality}, {property.location.city}
+                </h4>
+              </div>
+
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Situated in {property.location.locality}, a prime student hub in{" "}
+                {property.location.city} with convenient access to nearby colleges, transit stops, and libraries.
+              </p>
+
+              {property.location.nearbyLandmarks && property.location.nearbyLandmarks.length > 0 && (
+                <div className="pt-2 border-t border-slate-100 space-y-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-[#64748B] block">
+                    Nearby Landmarks &amp; Campuses
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {property.location.nearbyLandmarks.map((landmark, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1 rounded-xl bg-slate-50 border border-slate-200 text-[#10164F] text-xs font-semibold"
+                      >
+                        {landmark}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </Card>
           </section>
         </div>
 
-        {/* Right Sidebar: Owner Info & Sticky Booking Widget */}
+        {/* Right Column: Sticky Action Sidebar & Host Card */}
         <div className="space-y-6">
-          {/* Owner Info Card */}
-          <Card className="border-slate-800 bg-slate-900/90 p-6 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                <User className="h-6 w-6" />
-              </div>
-              <div>
-                <h4 className="font-bold text-white text-base">
-                  {property.ownerContact?.ownerName || "RoomSplits Verified Host"}
-                </h4>
-                <VerifiedBadge type="owner" />
-              </div>
-            </div>
-
-            <div className="space-y-2 text-xs text-slate-300 pt-2 border-t border-slate-800">
-              <div className="flex items-center justify-between">
-                <span>Response Time</span>
-                <span className="font-semibold text-emerald-400">&lt; 15 mins</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Physical Visits Handled</span>
-                <span className="font-semibold text-white">340+</span>
-              </div>
-            </div>
-          </Card>
-
-          {/* Schedule Visit Sticky Action Box */}
-          <VisitScheduleWidget property={property} />
+          <PropertyActionSidebar property={property} />
         </div>
       </div>
     </div>

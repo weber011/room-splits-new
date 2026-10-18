@@ -279,30 +279,30 @@ function mapDbPropertyToOwnerProperty(r: any): OwnerProperty {
     description: r.description,
     category: r.category,
     genderPolicy: r.gender_policy,
-    status: (r.verification_status || "DRAFT") as PropertyStatus,
-    isPublished: r.is_published,
+    status: (r.status === "published" ? "VERIFIED" : "DRAFT") as PropertyStatus,
+    isPublished: r.status === "published",
     location: {
-      address: r.address_line || "",
+      address: `${r.locality || ""}, ${r.city || ""}`,
       locality: r.locality || "",
-      city: r.city || "",
-      state: r.state || "Jharkhand",
-      country: r.country || "India",
-      pincode: r.pincode || "",
-      latitude: r.latitude ? Number(r.latitude) : undefined,
-      longitude: r.longitude ? Number(r.longitude) : undefined,
+      city: r.city || "Ranchi",
+      state: "Jharkhand",
+      country: "India",
+      pincode: "",
+      latitude: undefined,
+      longitude: undefined,
     },
-    amenities: ["Wi-Fi", "Daily Housekeeping", "Power Backup"],
+    amenities: ["High-Speed Wi-Fi", "Daily Housekeeping", "Power Backup"],
     rules: ["Standard PG Rules"],
-    images: images.length > 0 ? images : ["https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80"],
-    coverImage: images[0] || "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80",
+    images: images.length > 0 ? images : [r.cover_image || "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80"],
+    coverImage: r.cover_image || images[0] || "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80",
     videos,
-    featured: r.is_featured ?? false,
+    featured: Boolean(r.is_verified),
     startingPrice: Number(r.starting_price) || 8000,
-    rating: Number(r.rating) || 4.8,
-    reviewCount: r.review_count || 0,
+    rating: 4.8,
+    reviewCount: 0,
     roomOptions,
-    noticePeriodDays: r.notice_period_days || 30,
-    lockInMonths: r.lock_in_months || 3,
+    noticePeriodDays: 30,
+    lockInMonths: 3,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };
@@ -318,7 +318,7 @@ export const ownerService = {
       const { data: props } = await supabase
         .from("properties")
         .select(`
-          id, is_published, verification_status,
+          id, status, is_verified,
           rooms (total_beds, available_beds)
         `)
         .eq("owner_id", owner.id);
@@ -337,7 +337,7 @@ export const ownerService = {
 
         return {
           totalProperties: props.length,
-          activeProperties: props.filter((p) => p.verification_status === "VERIFIED" && p.is_published).length,
+          activeProperties: props.filter((p) => p.status === "published").length,
           totalRooms,
           availableRooms,
           pendingVisits: 0,
@@ -517,7 +517,6 @@ export const ownerService = {
           property_id: propData.id,
           image_url: input.images[i],
           display_order: i,
-          is_cover: i === 0,
         });
       }
     }

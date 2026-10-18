@@ -38,6 +38,8 @@ export interface PropertySearchParams {
   genderPolicy?: string;
   maxPrice?: number;
   minPrice?: number;
+  sharingType?: string;
+  amenities?: string[];
   sortBy?: string;
 }
 

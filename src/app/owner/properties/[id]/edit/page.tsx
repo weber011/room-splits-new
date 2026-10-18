@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LocationPicker } from "@/components/maps/LocationPicker";
 import { PropertyCategory, GenderPolicy } from "@/types";
 import { ArrowLeft, Save, CheckCircle2 } from "lucide-react";
+import { PropertyImageUploader } from "@/components/owner/PropertyImageUploader";
 
 export default function EditPropertyPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -250,6 +251,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
             </div>
           </div>
         </Card>
+
+        {/* Property Photos & Gallery Card */}
+        <PropertyImageUploader propertyId={property.id} />
 
         {/* Location & Address Card */}
         <Card className="border-slate-800 bg-slate-900/80 p-6 space-y-6">

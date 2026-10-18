@@ -33,9 +33,22 @@ import {
 import { RazorpayTransaction } from "@/types/payment.types";
 import { ComplaintTicket } from "@/types/complaint.types";
 import { Building2, Users, CreditCard, Sparkles, Layers, SlidersHorizontal } from "lucide-react";
+import {
+  Logo,
+  BrandButton,
+  BrandInput,
+  PasswordInput,
+  FormField,
+  SocialAuthGroup,
+  SmartphoneMockup,
+  BrandErrorAlert,
+  BrandSuccessAlert,
+} from "@/components/brand";
+import { RoleSelector, UserRoleType } from "@/components/auth/RoleSelector";
 
 export default function DesignSystemPage() {
-  const [activeTab, setActiveTab] = useState("primitives");
+  const [activeTab, setActiveTab] = useState("brand");
+  const [demoRole, setDemoRole] = useState<UserRoleType>("tenant");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedCity, setSelectedCity] = useState("Bengaluru");
 
@@ -231,6 +244,7 @@ export default function DesignSystemPage() {
         <div className="pt-4">
           <Tabs
             tabs={[
+              { id: "brand", label: "RoomSplits Brand & Identity (Step 1)", icon: Sparkles },
               { id: "primitives", label: "UI Primitives & Feedback", icon: Layers },
               { id: "cards", label: "Domain Cards & Components", icon: Building2 },
               { id: "dashboard", label: "Data Tables & Dashboard", icon: SlidersHorizontal },
@@ -240,6 +254,117 @@ export default function DesignSystemPage() {
           />
         </div>
       </div>
+
+      {/* Tab 0: RoomSplits Brand Identity (Step 1) */}
+      {activeTab === "brand" && (
+        <div className="space-y-12 animate-in fade-in duration-300">
+          {/* Brand Palette */}
+          <section className="space-y-4">
+            <h3 className="text-xl font-bold text-white">1. Color Palette Tokens</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <div className="p-4 rounded-2xl bg-[#10164F] text-white border border-slate-700">
+                <span className="block font-bold text-sm">Primary Navy</span>
+                <span className="text-xs text-slate-300">#10164F</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-[#151B65] text-white border border-slate-700">
+                <span className="block font-bold text-sm">Deep Navy</span>
+                <span className="text-xs text-slate-300">#151B65</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-[#3129C8] text-white">
+                <span className="block font-bold text-sm">Primary Indigo</span>
+                <span className="text-xs text-slate-200">#3129C8</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-[#FFF45C] text-[#10164F]">
+                <span className="block font-bold text-sm">Bright Yellow</span>
+                <span className="text-xs text-slate-700">#FFF45C</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-[#A7F3D0] text-[#10164F]">
+                <span className="block font-bold text-sm">Mint Green</span>
+                <span className="text-xs text-slate-700">#A7F3D0</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-[#DBEAFE] text-[#10164F]">
+                <span className="block font-bold text-sm">Light Blue</span>
+                <span className="text-xs text-slate-700">#DBEAFE</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-[#FAFAF7] text-[#1F2937]">
+                <span className="block font-bold text-sm">Warm Background</span>
+                <span className="text-xs text-[#64748B]">#FAFAF7</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-[#1F2937] text-white">
+                <span className="block font-bold text-sm">Primary Text</span>
+                <span className="text-xs text-slate-300">#1F2937</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-[#64748B] text-white">
+                <span className="block font-bold text-sm">Secondary Text</span>
+                <span className="text-xs text-slate-200">#64748B</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-white text-[#10164F] border border-slate-300">
+                <span className="block font-bold text-sm">White</span>
+                <span className="text-xs text-slate-500">#FFFFFF</span>
+              </div>
+            </div>
+          </section>
+
+          {/* Logo Showcase */}
+          <section className="space-y-4">
+            <h3 className="text-xl font-bold text-white">2. RoomSplits Logo Component</h3>
+            <div className="flex flex-wrap items-center gap-6 p-6 rounded-3xl bg-white">
+              <Logo size="sm" withLink={false} />
+              <Logo size="md" withLink={false} showTagline />
+              <Logo size="lg" withLink={false} />
+            </div>
+          </section>
+
+          {/* Brand Buttons */}
+          <section className="space-y-4">
+            <h3 className="text-xl font-bold text-white">3. Brand Buttons</h3>
+            <div className="flex flex-wrap items-center gap-4 p-6 rounded-3xl bg-white">
+              <BrandButton variant="primary">Primary Indigo →</BrandButton>
+              <BrandButton variant="navy">Deep Navy Action</BrandButton>
+              <BrandButton variant="secondary">Secondary Button</BrandButton>
+              <BrandButton variant="outline">Outline Button</BrandButton>
+              <BrandButton variant="mint">Mint Accent</BrandButton>
+              <BrandButton variant="yellow">Yellow Accent</BrandButton>
+              <BrandButton variant="primary" isLoading loadingText="Processing...">
+                Loading
+              </BrandButton>
+            </div>
+          </section>
+
+          {/* Form Inputs & Role Selector */}
+          <section className="space-y-4">
+            <h3 className="text-xl font-bold text-white">4. Form Fields & Role Selector</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-3xl bg-white">
+              <div className="space-y-4">
+                <RoleSelector value={demoRole} onChange={setDemoRole} />
+                <FormField label="Full Name" required>
+                  <BrandInput placeholder="Aarav Sharma" />
+                </FormField>
+                <FormField label="Password" required hint="Min 6 chars">
+                  <PasswordInput placeholder="••••••••" />
+                </FormField>
+              </div>
+              <div className="space-y-4">
+                <SocialAuthGroup />
+                <BrandErrorAlert title="Validation Example">
+                  Please provide a valid registered email address.
+                </BrandErrorAlert>
+                <BrandSuccessAlert title="Success Example">
+                  Account created successfully!
+                </BrandSuccessAlert>
+              </div>
+            </div>
+          </section>
+
+          {/* Smartphone Mockup */}
+          <section className="space-y-4">
+            <h3 className="text-xl font-bold text-white">5. Smartphone Mockup with Bedroom Photography</h3>
+            <div className="p-8 rounded-3xl bg-white flex justify-center">
+              <SmartphoneMockup />
+            </div>
+          </section>
+        </div>
+      )}
 
       {/* Tab 1: UI Primitives & Feedback */}
       {activeTab === "primitives" && (

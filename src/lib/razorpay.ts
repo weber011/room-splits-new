@@ -97,7 +97,7 @@ export function verifyServerRazorpaySignature(params: {
   const keySecret =
     env.RAZORPAY_KEY_SECRET ||
     process.env.RAZORPAY_KEY_SECRET ||
-    "RoomSplitsSecret2026SecureKey";
+    "";
 
   if (!keySecret) {
     return false;
@@ -135,7 +135,7 @@ export function verifyServerWebhookSignature(params: {
   const webhookSecret =
     env.RAZORPAY_WEBHOOK_SECRET ||
     process.env.RAZORPAY_WEBHOOK_SECRET ||
-    "RoomSplitsWebhookSecret2026";
+    "";
 
   if (!webhookSecret) {
     return false;

@@ -60,9 +60,9 @@ export const paymentService = {
     }
 
     return {
-      keyId: keyId || "rzp_test_RoomSplits2026Key",
-      keySecret: keySecret || "RoomSplitsSecret2026SecureKey",
-      webhookSecret: webhookSecret || "RoomSplitsWebhookSecret2026",
+      keyId: keyId || "",
+      keySecret: keySecret || "",
+      webhookSecret: webhookSecret || "",
     };
   },
 

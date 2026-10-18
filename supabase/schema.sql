@@ -1,2 +1,0 @@
--- Copy of complete RoomSplits database schema for Supabase
--- See supabase/migrations/20261004000000_create_roomsplits_schema.sql for migration file

@@ -1,100 +1,213 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import React, { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { resetPasswordAction } from "@/app/actions/auth.actions";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Alert } from "@/components/ui/alert";
-import { Building2, Loader2, KeyRound } from "lucide-react";
+import {
+  Logo,
+  BrandButton,
+  PasswordInput,
+  FormField,
+  GeometricDecorations,
+  AuthCard,
+  BrandErrorAlert,
+  BrandSuccessAlert,
+} from "@/components/brand";
+import { ArrowLeft, KeyRound, Check } from "lucide-react";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
 
-  const [errorMsg, setErrorMsg] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
   const [isPending, startTransition] = useTransition();
+
+  const validate = () => {
+    const errors: { [key: string]: string } = {};
+    if (!password) {
+      errors.password = "Please enter a new password.";
+    } else if (password.length < 6) {
+      errors.password = "Password must be at least 6 characters long.";
+    }
+    if (!confirmPassword) {
+      errors.confirmPassword = "Please confirm your new password.";
+    } else if (password !== confirmPassword) {
+      errors.confirmPassword = "Passwords do not match.";
+    }
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleResetPassword = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setErrorMsg("");
-    setSuccessMsg("");
+    setErrorMessage("");
+    setSuccessMessage("");
 
-    const formData = new FormData(e.currentTarget);
+    if (!validate()) return;
+
+    const formData = new FormData();
+    formData.set("password", password);
 
     startTransition(async () => {
-      const res = await resetPasswordAction(formData);
-      if (!res.success) {
-        setErrorMsg(res.message);
-      } else {
-        setSuccessMsg(res.message);
-        setTimeout(() => {
-          router.push("/login");
-        }, 1500);
+      try {
+        const res = await resetPasswordAction(formData);
+        if (!res.success) {
+          setErrorMessage(res.message);
+        } else {
+          setSuccessMessage(res.message);
+          setTimeout(() => {
+            router.push("/login");
+          }, 1500);
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Failed to update password.";
+        setErrorMessage(msg);
       }
     });
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 py-12 relative overflow-hidden">
-      <div className="w-full max-w-md space-y-6 relative z-10">
-        <div className="text-center space-y-2">
-          <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-500/20">
-              <Building2 className="h-6 w-6" />
+    <div className="relative min-h-screen bg-[#FAFAF7] text-[#1F2937] flex flex-col justify-between selection:bg-[#3129C8] selection:text-white">
+      {/* Decorative Geometric Shapes */}
+      <GeometricDecorations variant="auth" />
+
+      {/* Top Header */}
+      <header className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-between">
+        <Logo size="md" href="/welcome" />
+
+        <Link
+          href="/login"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#10164F] hover:text-[#3129C8] px-3 py-1.5 rounded-xl hover:bg-white/80 transition-colors"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Back to Sign In</span>
+        </Link>
+      </header>
+
+      {/* Main Content */}
+      <main className="relative z-10 w-full max-w-md mx-auto px-4 sm:px-6 py-6 sm:py-10 flex-1 flex flex-col justify-center">
+        <AuthCard>
+          <div className="text-center space-y-2 mb-6 sm:mb-8">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 text-[#3129C8] mb-1 shadow-sm">
+              <KeyRound className="w-7 h-7 text-[#10164F]" />
             </div>
-            <span className="text-2xl font-bold tracking-tight text-white">
-              Room<span className="text-emerald-400">Splits</span>
-            </span>
-          </Link>
-          <p className="text-xs text-slate-400">Create a new password for your account.</p>
-        </div>
 
-        <Card className="border-slate-800 bg-slate-900/90 shadow-2xl backdrop-blur-xl">
-          <CardHeader className="text-center space-y-2">
-            <CardTitle className="text-xl">Set New Password</CardTitle>
-            <CardDescription className="text-xs">
-              Enter your new secure password below
-            </CardDescription>
-          </CardHeader>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#10164F] tracking-tight">
+              Set New Password
+            </h1>
+            <p className="text-sm text-[#64748B]">
+              Enter and confirm your new secure password.
+            </p>
+          </div>
 
-          <CardContent className="space-y-4">
-            {errorMsg && <Alert variant="destructive">{errorMsg}</Alert>}
-            {successMsg && <Alert variant="success">{successMsg}</Alert>}
+          {errorMessage && (
+            <div className="mb-5">
+              <BrandErrorAlert title="Reset Error">
+                {errorMessage}
+              </BrandErrorAlert>
+            </div>
+          )}
 
-            <form onSubmit={handleResetPassword} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">New Password</label>
-                <Input
-                  name="password"
-                  type="password"
-                  placeholder="Minimum 6 characters"
-                  required
-                  minLength={6}
-                  disabled={isPending}
-                  className="bg-slate-950 border-slate-800"
-                />
-              </div>
+          {successMessage && (
+            <div className="mb-5">
+              <BrandSuccessAlert title="Password Updated!">
+                {successMessage}
+              </BrandSuccessAlert>
+            </div>
+          )}
 
-              <Button type="submit" className="w-full gap-2" size="lg" disabled={isPending}>
-                {isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Updating Password...
-                  </>
-                ) : (
-                  <>
-                    <KeyRound className="h-4 w-4" />
-                    Update Password
-                  </>
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+          <form onSubmit={handleResetPassword} noValidate className="space-y-4">
+            <FormField
+              id="password"
+              label="New Password"
+              required
+              hint="Min 6 characters"
+              error={fieldErrors.password}
+            >
+              <PasswordInput
+                id="password"
+                name="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (fieldErrors.password) {
+                    setFieldErrors((prev) => {
+                      const copy = { ...prev };
+                      delete copy.password;
+                      return copy;
+                    });
+                  }
+                }}
+                error={Boolean(fieldErrors.password)}
+                disabled={isPending}
+                required
+                autoComplete="new-password"
+              />
+            </FormField>
+
+            <FormField
+              id="confirmPassword"
+              label="Confirm New Password"
+              required
+              error={fieldErrors.confirmPassword}
+            >
+              <PasswordInput
+                id="confirmPassword"
+                name="confirmPassword"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (fieldErrors.confirmPassword) {
+                    setFieldErrors((prev) => {
+                      const copy = { ...prev };
+                      delete copy.confirmPassword;
+                      return copy;
+                    });
+                  }
+                }}
+                error={Boolean(fieldErrors.confirmPassword)}
+                disabled={isPending}
+                required
+                autoComplete="new-password"
+              />
+            </FormField>
+
+            <div className="pt-2">
+              <BrandButton
+                type="submit"
+                variant="primary"
+                size="lg"
+                fullWidth
+                isLoading={isPending}
+                loadingText="Updating Password..."
+                rightIcon={<Check className="w-4 h-4 ml-1" />}
+              >
+                Update Password →
+              </BrandButton>
+            </div>
+          </form>
+
+          <div className="mt-6 text-center pt-4 border-t border-slate-100">
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-1.5 text-xs text-[#64748B] hover:text-[#10164F] font-semibold transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Cancel and return to Sign In
+            </Link>
+          </div>
+        </AuthCard>
+      </main>
+
+      <footer className="relative z-10 w-full max-w-7xl mx-auto px-4 py-4 text-center text-[11px] text-[#64748B]">
+        RoomSplits • Jharkhand Student PG & Hostel Discovery Platform
+      </footer>
     </div>
   );
 }

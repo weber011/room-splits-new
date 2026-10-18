@@ -1,12 +1,21 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/layout/navbar";
-import { Footer } from "@/components/layout/footer";
-import { MobileBottomNavigation } from "@/components/common/MobileBottomNavigation";
+import { AppShell } from "@/components/layout/AppShell";
 import { siteConfig } from "@/config/site.config";
 
-const inter = Inter({ subsets: ["latin"] });
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-plus-jakarta",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -19,10 +28,11 @@ export const metadata: Metadata = {
     "Hostel discovery",
     "Co-living spaces",
     "Paying guest near me",
-    "Room splitz",
+    "Room splits",
     "Rent management",
     "Scheduled visits",
     "Zero brokerage PG",
+    "Jharkhand student accommodation",
   ],
   authors: [{ name: "RoomSplits Team" }],
   openGraph: {
@@ -46,12 +56,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.className} min-h-screen bg-slate-950 text-slate-100 flex flex-col antialiased pb-16 md:pb-0`}>
-        <Navbar />
-        <main className="flex-1">{children}</main>
-        <Footer />
-        <MobileBottomNavigation />
+    <html lang="en" className={`${plusJakarta.variable} ${inter.variable}`}>
+      <body className="antialiased">
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

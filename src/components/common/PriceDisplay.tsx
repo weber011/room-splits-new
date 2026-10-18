@@ -22,19 +22,19 @@ export function PriceDisplay({
   const sizeClasses = {
     sm: "text-base font-bold",
     md: "text-xl font-extrabold",
-    lg: "text-3xl font-extrabold",
+    lg: "text-2xl sm:text-3xl font-extrabold",
   };
 
   return (
     <div className={cn("flex flex-col", className)}>
-      {label && <span className="text-[11px] font-medium text-slate-400">{label}</span>}
+      {label && <span className="text-[11px] font-medium text-[#64748B]">{label}</span>}
       <div className="flex items-baseline gap-1.5">
-        <span className={cn(sizeClasses[size], "text-emerald-400 font-sans tracking-tight")}>
+        <span className={cn(sizeClasses[size], "text-[#10164F] tracking-tight")}>
           {formatCurrency(amount)}
         </span>
-        {period && <span className="text-xs text-slate-400 font-normal">/{period}</span>}
+        {period && <span className="text-xs text-[#64748B] font-medium">/{period}</span>}
         {originalAmount && (
-          <span className="text-xs text-slate-500 line-through ml-1">
+          <span className="text-xs text-slate-400 line-through ml-1">
             {formatCurrency(originalAmount)}
           </span>
         )}

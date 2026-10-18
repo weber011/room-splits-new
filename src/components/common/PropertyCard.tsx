@@ -1,135 +1,189 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { PriceDisplay } from "./PriceDisplay";
-import { RatingDisplay } from "./RatingDisplay";
-import { AmenityBadge } from "./AmenityBadge";
-import { VerifiedBadge } from "./VerifiedBadge";
-import { MapPin, CalendarCheck, Heart, Scale, Check } from "lucide-react";
+import { MapPin, Heart, Bed, ArrowRight } from "lucide-react";
 import { Property } from "@/types";
+import {
+  isPropertySaved,
+  toggleSaveProperty,
+  subscribeToStorage,
+} from "@/lib/student-storage";
 
 export interface PropertyCardProps {
   property: Property;
   onVisitRequest?: (propertyId: string) => void;
   onToggleCompare?: (property: Property) => void;
+  onSaveToggle?: (propertyId: string, isSaved: boolean) => void;
   isCompared?: boolean;
   className?: string;
 }
 
 export function PropertyCard({
   property,
-  onVisitRequest,
-  onToggleCompare,
-  isCompared = false,
+  onSaveToggle,
   className,
 }: PropertyCardProps) {
+  const FALLBACK_IMAGE =
+    "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80";
+
   const [isSaved, setIsSaved] = useState(false);
+  const [imgSrc, setImgSrc] = useState(
+    property.coverImage || property.images?.[0] || FALLBACK_IMAGE
+  );
+
+  useEffect(() => {
+    setImgSrc(property.coverImage || property.images?.[0] || FALLBACK_IMAGE);
+  }, [property.coverImage, property.images]);
+
+  useEffect(() => {
+    setIsSaved(isPropertySaved(property.id));
+    const unsubscribe = subscribeToStorage(() => {
+      setIsSaved(isPropertySaved(property.id));
+    });
+    return unsubscribe;
+  }, [property.id]);
+
+  const handleSaveClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const next = toggleSaveProperty(property.id);
+    setIsSaved(next);
+    if (onSaveToggle) {
+      onSaveToggle(property.id, next);
+    }
+    // Asynchronously sync with Supabase saved_properties if logged in
+    import("@/app/actions/saved-property.actions").then(({ toggleSavePropertyAction }) => {
+      toggleSavePropertyAction(property.id).catch(() => {});
+    });
+  };
+
+  // Extract sharing types from roomOptions or format cleanly
+  const sharingSummary = property.roomOptions && property.roomOptions.length > 0
+    ? property.roomOptions.map((r) => r.sharingType.replace("_", " ")).slice(0, 2).join(" & ") + " Sharing"
+    : "Single & Double Sharing";
 
   return (
-    <Card className={`overflow-hidden border-slate-800 hover:border-slate-700 hover:shadow-2xl transition-all duration-300 group flex flex-col justify-between ${className}`}>
+    <div
+      className={`bg-white rounded-3xl border border-slate-200/90 shadow-[0_8px_30px_rgba(16,22,79,0.06)] hover:shadow-[0_20px_40px_rgba(16,22,79,0.12)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between overflow-hidden group ${className}`}
+    >
       <div>
         {/* Cover Image & Overlay Badges */}
-        <div className="relative h-56 w-full overflow-hidden bg-slate-800">
+        <div className="relative h-56 w-full overflow-hidden bg-slate-100">
           <Image
-            src={property.coverImage || property.images?.[0] || "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80"}
-            alt={property.title}
+            src={imgSrc}
+            alt={`${property.title} - student accommodation photo`}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-500"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            onError={() => setImgSrc(FALLBACK_IMAGE)}
           />
+
+          {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-wrap gap-2 z-10">
-            {property.featured && (
-              <Badge variant="default" className="shadow-md">
-                Featured
-              </Badge>
+            {property.verified ? (
+              <span className="bg-emerald-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-xs uppercase tracking-wider">
+                Verified PG
+              </span>
+            ) : property.id.startsWith("prop-") ? (
+              <span className="bg-[#FFF45C] text-[#10164F] text-[10px] font-black px-2.5 py-1 rounded-full shadow-xs uppercase tracking-wider">
+                Demo Listing
+              </span>
+            ) : (
+              <span className="bg-indigo-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-xs uppercase tracking-wider">
+                Active PG
+              </span>
             )}
-            <VerifiedBadge type="property" />
-            <Badge variant="secondary" className="bg-slate-950/80 backdrop-blur-md uppercase text-[10px]">
-              {property.genderPolicy}
-            </Badge>
+            <span className="bg-white/95 backdrop-blur-md text-[#10164F] text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-slate-200/60 shadow-xs">
+              {property.genderPolicy === "boys"
+                ? "Boys Only"
+                : property.genderPolicy === "girls"
+                ? "Girls Only"
+                : "Co-Ed Stay"}
+            </span>
           </div>
 
-          {/* Action Buttons: Save & Compare */}
-          <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
+          {/* Save Heart Button with interactive micro-bounce */}
+          <div className="absolute top-3 right-3 z-10">
             <button
-              onClick={() => setIsSaved(!isSaved)}
-              className={`p-2 rounded-full backdrop-blur-md transition-all shadow-md ${
+              type="button"
+              onClick={handleSaveClick}
+              className={`p-2.5 rounded-full backdrop-blur-md transition-all shadow-xs cursor-pointer active:scale-125 duration-150 ${
                 isSaved
                   ? "bg-rose-500 text-white"
-                  : "bg-slate-950/70 text-slate-300 hover:text-white hover:bg-slate-900"
+                  : "bg-white/90 text-slate-500 hover:text-rose-500 hover:bg-white"
               }`}
-              aria-label="Save Property"
+              aria-label={isSaved ? "Remove from Shortlist" : "Save to Shortlist"}
             >
               <Heart className={`h-4 w-4 ${isSaved ? "fill-white" : ""}`} />
             </button>
-
-            {onToggleCompare && (
-              <button
-                onClick={() => onToggleCompare(property)}
-                className={`p-2 rounded-full backdrop-blur-md transition-all shadow-md ${
-                  isCompared
-                    ? "bg-emerald-500 text-white"
-                    : "bg-slate-950/70 text-slate-300 hover:text-white hover:bg-slate-900"
-                }`}
-                title={isCompared ? "Remove from Compare" : "Add to Compare"}
-                aria-label="Compare Property"
-              >
-                {isCompared ? <Check className="h-4 w-4" /> : <Scale className="h-4 w-4" />}
-              </button>
-            )}
-          </div>
-
-          <div className="absolute bottom-3 right-3 z-10">
-            <RatingDisplay rating={property.rating} reviewCount={property.reviewCount} />
           </div>
         </div>
 
         {/* Content Body */}
-        <CardContent className="p-6 space-y-4">
-          <div>
-            <Link href={`/property/${property.id}`}>
-              <h3 className="font-bold text-lg text-white group-hover:text-emerald-400 transition-colors line-clamp-1">
-                {property.title}
-              </h3>
-            </Link>
-            <p className="text-xs text-slate-400 flex items-center gap-1 mt-1">
-              <MapPin className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-              <span>{property.location.locality}, {property.location.city}</span>
-            </p>
+        <div className="p-5 space-y-3">
+          {/* Category & Sharing Info */}
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#3129C8] bg-indigo-50 px-2 py-0.5 rounded-md">
+              {property.category.toUpperCase()} &bull; {property.location.city}
+            </span>
+
+            <span className="text-[11px] font-bold text-gray-500 flex items-center gap-1">
+              <Bed className="w-3.5 h-3.5 text-[#3129C8]" />
+              <span className="capitalize">{sharingSummary}</span>
+            </span>
           </div>
 
-          {/* Amenities Badges */}
+          {/* Title */}
+          <Link href={`/property/${property.id}`} className="block group-hover:text-[#3129C8] transition-colors">
+            <h3 className="text-base font-extrabold text-[#10164F] line-clamp-1 leading-snug">
+              {property.title}
+            </h3>
+          </Link>
+
+          {/* Locality */}
+          <p className="text-xs text-[#64748B] flex items-center gap-1.5 font-medium">
+            <MapPin className="h-3.5 w-3.5 text-[#3129C8] shrink-0" />
+            <span className="truncate">
+              {property.location.locality}, {property.location.city}
+            </span>
+          </p>
+
+          {/* Amenities preview */}
           <div className="flex flex-wrap gap-1.5 pt-1">
-            {property.amenities.slice(0, 3).map((amenity) => (
-              <AmenityBadge key={amenity} name={amenity} />
+            {property.amenities.slice(0, 3).map((amenity, idx) => (
+              <span
+                key={idx}
+                className="inline-flex items-center text-[10px] font-semibold bg-[#FAFAF7] text-[#10164F] px-2.5 py-1 rounded-lg border border-[#10164F]/10"
+              >
+                {amenity}
+              </span>
             ))}
             {property.amenities.length > 3 && (
-              <span className="text-[10px] text-slate-400 self-center font-medium">
+              <span className="text-[10px] text-[#64748B] font-semibold px-1 py-1">
                 +{property.amenities.length - 3} more
               </span>
             )}
           </div>
-        </CardContent>
+        </div>
       </div>
 
-      {/* Footer Price & Action */}
-      <div className="p-6 pt-0 border-t border-slate-800/80 mt-2 flex items-center justify-between">
-        <PriceDisplay amount={property.startingPrice} />
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => onVisitRequest?.(property.id)}
-          className="gap-1.5 hover:border-emerald-500"
-        >
-          <CalendarCheck className="h-3.5 w-3.5 text-emerald-400" />
-          Book Visit
-        </Button>
+      {/* Footer / Illustrative Price & Details Action */}
+      <div className="px-5 pb-5 pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+        <div>
+          <PriceDisplay amount={property.startingPrice} size="md" />
+          <span className="text-[9px] text-gray-400 block -mt-1 font-medium">Sample Demo Rent</span>
+        </div>
+
+        <Link href={`/property/${property.id}`}>
+          <button className="px-4 py-2 rounded-xl bg-[#3129C8] hover:bg-[#251fa3] text-white font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-all">
+            <span>View Details</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </Link>
       </div>
-    </Card>
+    </div>
   );
 }

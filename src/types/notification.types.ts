@@ -1,4 +1,23 @@
+/**
+ * Notification Types and Constants for RoomSplits
+ * Phase 13: Notifications and User Communication
+ */
+
+export const NOTIFICATION_TYPES = [
+  "visit_requested",
+  "visit_confirmed",
+  "visit_declined",
+  "visit_rescheduled",
+  "visit_cancelled",
+  "visit_completed",
+  "system",
+] as const;
+
+export type DbNotificationType = (typeof NOTIFICATION_TYPES)[number];
+
+// Legacy enum aliases for UI icons and backward compatibility
 export type NotificationType =
+  | DbNotificationType
   | "VISIT_CONFIRMED"
   | "VISIT_RESCHEDULED"
   | "BOOKING_CONFIRMED"
@@ -13,26 +32,37 @@ export type NotificationType =
 
 export type NotificationChannel = "IN_APP" | "EMAIL" | "SMS" | "WHATSAPP";
 
-export interface AppNotification {
+export interface DbNotification {
   id: string;
-  recipient: string; // User ID or Role (e.g. "u-101", "owner-1", "admin")
-  type: NotificationType;
+  user_id: string;
+  type: DbNotificationType;
   title: string;
   message: string;
-  relatedEntity: "visit" | "booking" | "payment" | "complaint" | "stay" | "checkout" | "system";
-  relatedEntityId: string;
-  read: boolean;
+  property_id: string | null;
+  visit_id: string | null;
+  is_read: boolean;
+  read_at: string | null;
   created_at: string;
 }
 
-export interface CreateNotificationInput {
+export interface AppNotification extends DbNotification {
+  // UI backward-compatibility convenience getters
   recipient: string;
-  type: NotificationType;
+  read: boolean;
+  relatedEntity: "visit" | "booking" | "payment" | "complaint" | "stay" | "checkout" | "property" | "system";
+  relatedEntityId?: string;
+  propertyTitle?: string;
+  propertyId?: string;
+  visitId?: string;
+}
+
+export interface CreateNotificationInput {
+  userId: string;
+  type: DbNotificationType;
   title: string;
   message: string;
-  relatedEntity: "visit" | "booking" | "payment" | "complaint" | "stay" | "checkout" | "system";
-  relatedEntityId: string;
-  channels?: NotificationChannel[];
+  propertyId?: string;
+  visitId?: string;
 }
 
 export interface ExternalNotificationPayload {

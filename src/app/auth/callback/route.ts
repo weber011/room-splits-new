@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse, type NextRequest } from "next/server";
+import { sanitizeRedirectPath } from "@/lib/auth-helpers";
 
 /**
  * Supabase Auth Callback Route Handler
@@ -8,7 +9,8 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const next = requestUrl.searchParams.get("next") || "/account";
+  const rawNext = requestUrl.searchParams.get("next") || "/account";
+  const next = sanitizeRedirectPath(rawNext, "/account");
 
   if (code) {
     const supabase = await createClient();

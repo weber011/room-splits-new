@@ -1,103 +1,172 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import React, { useState, useTransition } from "react";
 import Link from "next/link";
 import { forgotPasswordAction } from "@/app/actions/auth.actions";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Alert } from "@/components/ui/alert";
-import { Building2, Loader2, ArrowLeft, Mail } from "lucide-react";
+import {
+  Logo,
+  BrandButton,
+  BrandInput,
+  FormField,
+  GeometricDecorations,
+  AuthCard,
+  BrandErrorAlert,
+  BrandSuccessAlert,
+} from "@/components/brand";
+import { Mail, ArrowLeft, Send, KeyRound } from "lucide-react";
 
 export default function ForgotPasswordPage() {
-  const [errorMsg, setErrorMsg] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
+  const [email, setEmail] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [fieldError, setFieldError] = useState("");
   const [isPending, startTransition] = useTransition();
 
   const handleForgotPassword = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setErrorMsg("");
-    setSuccessMsg("");
+    setErrorMessage("");
+    setSuccessMessage("");
+    setFieldError("");
 
-    const formData = new FormData(e.currentTarget);
+    if (!email.trim()) {
+      setFieldError("Please enter your registered email address.");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setFieldError("Please enter a valid email address.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.set("email", email.trim());
 
     startTransition(async () => {
-      const res = await forgotPasswordAction(formData);
-      if (!res.success) {
-        setErrorMsg(res.message);
-      } else {
-        setSuccessMsg(res.message);
+      try {
+        const res = await forgotPasswordAction(formData);
+        if (!res.success) {
+          setErrorMessage(res.message);
+        } else {
+          setSuccessMessage(res.message);
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Failed to send reset link.";
+        setErrorMessage(msg);
       }
     });
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 py-12 relative overflow-hidden">
-      <div className="w-full max-w-md space-y-6 relative z-10">
-        <div className="text-center space-y-2">
-          <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-500/20">
-              <Building2 className="h-6 w-6" />
+    <div className="relative min-h-screen bg-[#FAFAF7] text-[#1F2937] flex flex-col justify-between selection:bg-[#3129C8] selection:text-white">
+      {/* Decorative Geometric Shapes */}
+      <GeometricDecorations variant="auth" />
+
+      {/* Top Header */}
+      <header className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-between">
+        <Logo size="md" href="/welcome" />
+
+        <Link
+          href="/login"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#10164F] hover:text-[#3129C8] px-3 py-1.5 rounded-xl hover:bg-white/80 transition-colors"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Back to Sign In</span>
+        </Link>
+      </header>
+
+      {/* Main Content */}
+      <main className="relative z-10 w-full max-w-md mx-auto px-4 sm:px-6 py-6 sm:py-10 flex-1 flex flex-col justify-center">
+        <AuthCard>
+          {/* Header */}
+          <div className="text-center space-y-2 mb-6 sm:mb-8">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 text-[#3129C8] mb-1 shadow-sm">
+              <KeyRound className="w-7 h-7 text-[#10164F]" />
             </div>
-            <span className="text-2xl font-bold tracking-tight text-white">
-              Room<span className="text-emerald-400">Splits</span>
-            </span>
-          </Link>
-          <p className="text-xs text-slate-400">Reset your password via email recovery link.</p>
-        </div>
 
-        <Card className="border-slate-800 bg-slate-900/90 shadow-2xl backdrop-blur-xl">
-          <CardHeader className="text-center space-y-2">
-            <CardTitle className="text-xl">Forgot Password?</CardTitle>
-            <CardDescription className="text-xs">
-              Enter your registered email address below and we will send you a password reset link.
-            </CardDescription>
-          </CardHeader>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#10164F] tracking-tight">
+              Forgot Password?
+            </h1>
+            <p className="text-sm text-[#64748B] max-w-xs mx-auto">
+              Enter your registered email address and we&apos;ll send a password recovery link.
+            </p>
+          </div>
 
-          <CardContent className="space-y-4">
-            {errorMsg && <Alert variant="destructive">{errorMsg}</Alert>}
-            {successMsg && <Alert variant="success">{successMsg}</Alert>}
+          {/* Status Alerts */}
+          {errorMessage && (
+            <div className="mb-5">
+              <BrandErrorAlert title="Notice">
+                {errorMessage}
+              </BrandErrorAlert>
+            </div>
+          )}
 
-            <form onSubmit={handleForgotPassword} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Email Address</label>
-                <Input
-                  name="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  required
-                  disabled={isPending}
-                  className="bg-slate-950 border-slate-800"
-                />
-              </div>
+          {successMessage && (
+            <div className="mb-5">
+              <BrandSuccessAlert title="Link Dispatched">
+                {successMessage}
+              </BrandSuccessAlert>
+            </div>
+          )}
 
-              <Button type="submit" className="w-full gap-2" size="lg" disabled={isPending}>
-                {isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Sending Email...
-                  </>
-                ) : (
-                  <>
-                    <Mail className="h-4 w-4" />
-                    Send Password Reset Link
-                  </>
-                )}
-              </Button>
-            </form>
+          {/* Form */}
+          <form onSubmit={handleForgotPassword} noValidate className="space-y-4">
+            <FormField
+              id="email"
+              label="Registered Email Address"
+              required
+              error={fieldError}
+              hint="Check your spam folder if not received"
+            >
+              <BrandInput
+                id="email"
+                name="email"
+                type="email"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (fieldError) setFieldError("");
+                }}
+                error={Boolean(fieldError)}
+                disabled={isPending}
+                leftIcon={<Mail className="w-4 h-4 text-slate-400" />}
+                required
+                autoComplete="email"
+              />
+            </FormField>
 
-            <div className="text-center pt-4 border-t border-slate-800/80">
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors font-medium"
+            <div className="pt-2">
+              <BrandButton
+                type="submit"
+                variant="primary"
+                size="lg"
+                fullWidth
+                isLoading={isPending}
+                loadingText="Sending Recovery Link..."
+                rightIcon={<Send className="w-4 h-4 ml-1" />}
               >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                Back to Login
-              </Link>
+                Send Password Reset Link →
+              </BrandButton>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </form>
+
+          {/* Bottom Link */}
+          <div className="mt-6 text-center pt-4 border-t border-slate-100">
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-1.5 text-xs text-[#64748B] hover:text-[#10164F] font-semibold transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Remember your password? Sign In
+            </Link>
+          </div>
+        </AuthCard>
+      </main>
+
+      {/* Footer Minimal */}
+      <footer className="relative z-10 w-full max-w-7xl mx-auto px-4 py-4 text-center text-[11px] text-[#64748B]">
+        RoomSplits • Jharkhand Student PG & Hostel Discovery Platform
+      </footer>
     </div>
   );
 }

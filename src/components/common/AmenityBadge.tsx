@@ -29,11 +29,11 @@ export function AmenityBadge({ name, showIcon = true, className }: AmenityBadgeP
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-900/80 px-2.5 py-1 text-xs text-slate-300 font-medium",
+        "inline-flex items-center gap-2 rounded-xl border border-[#10164F]/10 bg-white px-3 py-1.5 text-xs text-[#10164F] font-semibold shadow-xs hover:border-[#3129C8]/30 transition-all",
         className
       )}
     >
-      {showIcon && <Icon className="h-3.5 w-3.5 text-emerald-400" />}
+      {showIcon && <Icon className="h-3.5 w-3.5 text-[#3129C8]" />}
       <span>{name}</span>
     </span>
   );

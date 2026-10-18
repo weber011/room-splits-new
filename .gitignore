@@ -18,21 +18,33 @@
 /dist
 
 # misc
-.DS_Store
+# security & secrets
 *.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12
+*.pkcs12
+*service-account*.json
+credentials.json
 
-# debug
+# debug & logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
 
-# env files (ignore secrets, allow template)
+# env files (ignore all actual env files, keep only template)
 .env
+.env.*
+.env*.local
 .env.local
-.env.*.local
 .env.development
+.env.test
 .env.production
+.env.staging
 !.env.example
 
 # vercel

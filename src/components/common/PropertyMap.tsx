@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { PropertyLocationCoordinates, NearbyLandmark } from "@/types/map.types";
 import { DEFAULT_NEARBY_LANDMARKS } from "@/lib/maps.utils";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PLATFORM_SETTINGS } from "@/config/business-rules.config";
 import {
@@ -18,7 +17,6 @@ import {
   ShoppingBag,
   ExternalLink,
   ShieldCheck,
-  AlertTriangle,
 } from "lucide-react";
 
 export interface PropertyMapProps {
@@ -151,15 +149,15 @@ export function PropertyMap({
       : undefined;
 
   return (
-    <Card className={`border-slate-800 bg-slate-900/90 p-5 space-y-4 ${className}`}>
+    <Card className={`rounded-3xl border border-[#10164F]/10 bg-white p-6 space-y-4 shadow-sm ${className}`}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#10164F]/10 pb-4">
         <div>
-          <h3 className="font-bold text-white text-base flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-emerald-400" />
-            <span>{isExactLocationVisible ? "Exact Location & Directions" : "📍 Approximate Location"}</span>
+          <h3 className="font-extrabold text-[#10164F] text-base flex items-center gap-2">
+            <MapPin className="h-5 w-5 text-[#3129C8]" />
+            <span>{isExactLocationVisible ? "Exact Location & Directions" : "Approximate Locality"}</span>
           </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-gray-500 mt-0.5">
             {isExactLocationVisible
               ? location.formatted_address || `${location.city}, ${location.state}`
               : `Locality: ${location.city || "Ranchi"}, ${location.state || "Jharkhand"}`}
@@ -167,48 +165,48 @@ export function PropertyMap({
         </div>
 
         {isExactLocationVisible ? (
-          <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-xs gap-1 self-start sm:self-auto">
-            <ShieldCheck className="h-3.5 w-3.5" />
+          <span className="px-3 py-1 rounded-full bg-[#A7F3D0] text-[#10164F] font-bold text-xs flex items-center gap-1 self-start sm:self-auto">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-700" />
             Exact Address Unlocked
-          </Badge>
+          </span>
         ) : (
-          <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/30 text-xs gap-1 self-start sm:self-auto">
+          <span className="px-3 py-1 rounded-full bg-[#FFF45C] text-[#10164F] font-bold text-xs flex items-center gap-1 self-start sm:self-auto">
             <Lock className="h-3.5 w-3.5" />
-            Exact Location Hidden
-          </Badge>
+            Exact Location Protected
+          </span>
         )}
       </div>
 
       {/* Privacy Warning Banner if Restricted */}
       {!isExactLocationVisible && (
-        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs space-y-1">
-          <div className="flex items-center gap-2 font-bold text-amber-200 text-sm">
-            <Lock className="h-4 w-4 text-amber-400 shrink-0" />
-            <span>🔒 Exact location hidden</span>
+        <div className="p-4 rounded-2xl bg-[#FFF45C]/25 border border-[#FFF45C] text-[#10164F] text-xs space-y-1">
+          <div className="flex items-center gap-2 font-extrabold text-[#10164F] text-sm">
+            <Lock className="h-4 w-4 text-[#10164F] shrink-0" />
+            <span>Exact location hidden for privacy</span>
           </div>
-          <p className="text-xs text-amber-300/90">
-            Unlock this property for <strong>{PLATFORM_SETTINGS.UNLOCK_PRICE_LABEL}</strong> to see the exact building address, GPS coordinates, owner phone, and visit instructions. Note: {PLATFORM_SETTINGS.VISIT_PASS_LABEL} is a property unlock pass, not a room booking.
+          <p className="text-xs text-gray-700">
+            Unlock this property for <strong>{PLATFORM_SETTINGS.UNLOCK_PRICE_LABEL}</strong> to see the exact building address, GPS coordinates, owner phone, and visit instructions.
           </p>
         </div>
       )}
 
       {/* Map Interactive Canvas or Graceful Fallback */}
-      <div className="relative h-64 w-full rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 flex flex-col items-center justify-center text-center p-4">
+      <div className="relative h-64 w-full rounded-2xl overflow-hidden border border-[#10164F]/10 bg-[#FAFAF7] flex flex-col items-center justify-center text-center p-4">
         {mapsStatus === "ready" ? (
           <div ref={mapRef} className="h-full w-full" />
         ) : (
           /* Graceful Fallback UI when API key missing or Maps unavailable */
           <div className="relative z-10 space-y-3 max-w-sm">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 mx-auto shadow-xl">
-              <AlertTriangle className="h-6 w-6" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FFF45C] text-[#10164F] border border-[#10164F]/15 mx-auto shadow-xs">
+              <MapPin className="h-6 w-6 text-[#10164F]" />
             </div>
 
             <div>
-              <h4 className="font-bold text-white text-sm">Map temporarily unavailable.</h4>
-              <p className="text-xs text-slate-400 mt-1">
+              <h4 className="font-extrabold text-[#10164F] text-sm">Verified Locality Map</h4>
+              <p className="text-xs text-gray-600 mt-1">
                 {isExactLocationVisible
                   ? location.formatted_address || `${location.city}, ${location.state} ${location.pincode}`
-                  : `Approximate Locality: ${location.city || "Ranchi"}, ${location.state || "Jharkhand"}`}
+                  : `Locality Hub: ${location.city || "Ranchi"}, ${location.state || "Jharkhand"}`}
               </p>
             </div>
           </div>
@@ -219,7 +217,7 @@ export function PropertyMap({
           <div className="absolute bottom-3 right-3 z-20 flex flex-wrap gap-2">
             {openInGoogleMapsUrl && (
               <a href={openInGoogleMapsUrl} target="_blank" rel="noreferrer">
-                <Button size="sm" className="bg-slate-900/90 hover:bg-slate-800 text-emerald-400 border border-emerald-500/30 font-bold text-xs gap-1.5 shadow-lg">
+                <Button size="sm" className="bg-white text-[#10164F] hover:bg-gray-50 border border-[#10164F]/20 font-bold text-xs gap-1.5 shadow-md">
                   <ExternalLink className="h-3.5 w-3.5" />
                   <span>Open in Google Maps</span>
                 </Button>
@@ -227,7 +225,7 @@ export function PropertyMap({
             )}
             {directionsUrl && (
               <a href={directionsUrl} target="_blank" rel="noreferrer">
-                <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs gap-1.5 shadow-lg">
+                <Button size="sm" className="bg-[#3129C8] hover:bg-[#251fa3] text-white font-bold text-xs gap-1.5 shadow-md">
                   <Navigation className="h-3.5 w-3.5" />
                   <span>Get Directions</span>
                 </Button>
@@ -238,32 +236,32 @@ export function PropertyMap({
       </div>
 
       {/* Nearby Distance Matrix Chips */}
-      <div className="space-y-2 pt-2 border-t border-slate-800">
-        <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-          Nearby Colleges, IT Parks & Transit
+      <div className="space-y-3 pt-3 border-t border-[#10164F]/10">
+        <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+          Nearby Colleges, IT Parks &amp; Transit Hubs
         </h4>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           {nearbyLandmarks.map((lm) => (
             <div
               key={lm.id}
-              className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3"
+              className="p-3.5 rounded-2xl bg-[#FAFAF7] border border-[#10164F]/10 flex items-center justify-between gap-3 shadow-2xs"
             >
               <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
+                <div className="p-2 rounded-xl bg-white border border-[#10164F]/10 text-[#3129C8]">
                   {getLandmarkIcon(lm.type)}
                 </div>
                 <div>
-                  <h5 className="font-bold text-white text-xs leading-snug">{lm.name}</h5>
+                  <h5 className="font-bold text-[#10164F] text-xs leading-snug">{lm.name}</h5>
                   {lm.travelTimeMinutes && (
-                    <span className="text-[10px] text-slate-400">{lm.travelTimeMinutes} mins drive</span>
+                    <span className="text-[11px] text-gray-500">{lm.travelTimeMinutes} mins travel</span>
                   )}
                 </div>
               </div>
 
-              <Badge variant="outline" className="text-emerald-400 border-emerald-500/30 text-[11px] font-mono shrink-0">
+              <span className="px-2.5 py-0.5 rounded-full bg-white border border-[#10164F]/10 text-[#10164F] text-[11px] font-bold shrink-0">
                 {lm.distanceKm} km
-              </Badge>
+              </span>
             </div>
           ))}
         </div>

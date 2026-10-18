@@ -19,7 +19,6 @@ import {
   ExternalLink,
   Mail,
   MessageSquare,
-  Smartphone,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -31,9 +30,11 @@ export default function NotificationsPage() {
 
   const loadData = async () => {
     try {
-      const data = await notificationService.getNotifications("u-101");
+      const [data, count] = await Promise.all([
+        notificationService.getNotifications(),
+        notificationService.getUnreadCount(),
+      ]);
       setNotifications(data);
-      const count = await notificationService.getUnreadCount("u-101");
       setUnreadCount(count);
     } catch (err) {
       console.error("Failed to load notifications page data", err);
@@ -52,26 +53,34 @@ export default function NotificationsPage() {
   };
 
   const handleMarkAllAsRead = async () => {
-    await notificationService.markAllAsRead("u-101");
+    await notificationService.markAllAsRead();
     await loadData();
   };
 
-  const getNotificationIcon = (type: NotificationType) => {
-    switch (type) {
-      case "VISIT_CONFIRMED":
-      case "VISIT_RESCHEDULED":
+  const getNotificationIcon = (type: NotificationType | string) => {
+    const t = type.toLowerCase();
+    switch (t) {
+      case "visit_confirmed":
+      case "visit_rescheduled":
         return <CalendarCheck className="h-5 w-5 text-emerald-400" />;
-      case "BOOKING_CONFIRMED":
-        return <Building className="h-5 w-5 text-blue-400" />;
-      case "PAYMENT_SUCCESS":
-      case "RENT_DUE":
-        return <CreditCard className="h-5 w-5 text-emerald-400" />;
-      case "PAYMENT_FAILED":
+      case "visit_declined":
+      case "visit_cancelled":
         return <AlertCircle className="h-5 w-5 text-rose-400" />;
-      case "COMPLAINT_UPDATED":
+      case "visit_completed":
+        return <CalendarCheck className="h-5 w-5 text-purple-400" />;
+      case "visit_requested":
+        return <Building className="h-5 w-5 text-amber-400" />;
+      case "booking_confirmed":
+        return <Building className="h-5 w-5 text-blue-400" />;
+      case "payment_success":
+      case "rent_due":
+        return <CreditCard className="h-5 w-5 text-emerald-400" />;
+      case "payment_failed":
+        return <AlertCircle className="h-5 w-5 text-rose-400" />;
+      case "complaint_updated":
         return <Wrench className="h-5 w-5 text-amber-400" />;
-      case "DEPOSIT_SETTLEMENT":
-      case "CHECKOUT_UPDATED":
+      case "deposit_settlement":
+      case "checkout_updated":
         return <LogOut className="h-5 w-5 text-purple-400" />;
       default:
         return <Sparkles className="h-5 w-5 text-emerald-400" />;
@@ -79,11 +88,19 @@ export default function NotificationsPage() {
   };
 
   const getEntityLink = (notif: AppNotification) => {
+    const propId = notif.property_id || notif.propertyId;
+    if (propId) {
+      return `/property/${propId}`;
+    }
+    const visId = notif.visit_id || notif.visitId;
+    if (visId || notif.relatedEntity === "visit") {
+      return notif.type === "visit_requested" || notif.type === "visit_cancelled"
+        ? `/owner/visits`
+        : `/visits`;
+    }
     switch (notif.relatedEntity) {
       case "payment":
         return `/payments/${notif.relatedEntityId}`;
-      case "visit":
-        return `/visits/${notif.relatedEntityId}`;
       case "booking":
         return `/bookings/${notif.relatedEntityId}`;
       case "complaint":
@@ -92,16 +109,17 @@ export default function NotificationsPage() {
       case "checkout":
         return `/my-stay`;
       default:
-        return `#`;
+        return `/notifications`;
     }
   };
 
   const filtered = notifications.filter((n) => {
     if (typeFilter === "UNREAD") return !n.read;
-    if (typeFilter === "PAYMENTS") return n.type === "PAYMENT_SUCCESS" || n.type === "RENT_DUE" || n.type === "PAYMENT_FAILED";
-    if (typeFilter === "VISITS") return n.type === "VISIT_CONFIRMED" || n.type === "BOOKING_CONFIRMED" || n.type === "VISIT_RESCHEDULED";
-    if (typeFilter === "SUPPORT") return n.type === "COMPLAINT_UPDATED";
-    if (typeFilter === "SETTLEMENT") return n.type === "DEPOSIT_SETTLEMENT" || n.type === "CHECKOUT_UPDATED";
+    if (typeFilter === "VISITS") {
+      const t = n.type.toLowerCase();
+      return t.startsWith("visit") || t.startsWith("booking");
+    }
+    if (typeFilter === "SUPPORT") return n.type.toLowerCase().includes("complaint");
     return true;
   });
 
@@ -113,10 +131,10 @@ export default function NotificationsPage() {
           <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 mb-2">Notification Center</Badge>
           <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
             <Bell className="h-8 w-8 text-emerald-400" />
-            <span>In-App & Multi-Channel Alerts</span>
+            <span>Alerts & Notifications</span>
           </h1>
           <p className="text-sm text-slate-400 mt-1">
-            Real-time notifications for rent dues, payment receipts, visit confirmations, and complaint updates.
+            Real-time notifications for visit requests, confirmations, schedule changes, and property updates.
           </p>
         </div>
 
@@ -124,7 +142,7 @@ export default function NotificationsPage() {
           <Button
             onClick={handleMarkAllAsRead}
             size="sm"
-            className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold gap-1.5 text-xs self-start sm:self-auto"
+            className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold gap-1.5 text-xs self-start sm:self-auto cursor-pointer"
           >
             <CheckCheck className="h-4 w-4" />
             <span>Mark All ({unreadCount}) As Read</span>
@@ -132,27 +150,27 @@ export default function NotificationsPage() {
         )}
       </div>
 
-      {/* External Multi-Channel Dispatcher Banner */}
+      {/* Multi-Channel Status Banner */}
       <Card className="border-slate-800 bg-slate-900/60 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
             <Sparkles className="h-5 w-5" />
           </div>
           <div>
-            <h4 className="font-bold text-white text-xs">Multi-Channel Delivery Providers Connected</h4>
-            <p className="text-[11px] text-slate-400">All notifications auto-dispatched to In-App, Email, SMS & WhatsApp adapters.</p>
+            <h4 className="font-bold text-white text-xs">Multi-Channel Delivery Status</h4>
+            <p className="text-[11px] text-slate-400">Database-backed in-app notifications active. Email, SMS & WhatsApp delivery adapters prepared for future rollout.</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 text-[10px] font-bold">
           <Badge variant="outline" className="border-emerald-500/30 text-emerald-400 bg-emerald-500/10 gap-1">
-            <Mail className="h-3 w-3" /> Email (AWS SES)
+            <Bell className="h-3 w-3" /> In-App (Active)
           </Badge>
-          <Badge variant="outline" className="border-emerald-500/30 text-emerald-400 bg-emerald-500/10 gap-1">
-            <Smartphone className="h-3 w-3" /> SMS (Twilio)
+          <Badge variant="outline" className="border-slate-700 text-slate-400 bg-slate-800/50 gap-1">
+            <Mail className="h-3 w-3" /> Email (Documented)
           </Badge>
-          <Badge variant="outline" className="border-emerald-500/30 text-emerald-400 bg-emerald-500/10 gap-1">
-            <MessageSquare className="h-3 w-3" /> WhatsApp Business API
+          <Badge variant="outline" className="border-slate-700 text-slate-400 bg-slate-800/50 gap-1">
+            <MessageSquare className="h-3 w-3" /> WhatsApp (Documented)
           </Badge>
         </div>
       </Card>
@@ -162,15 +180,13 @@ export default function NotificationsPage() {
         {[
           { id: "ALL", label: "All Alerts" },
           { id: "UNREAD", label: `Unread (${unreadCount})` },
-          { id: "PAYMENTS", label: "Payments & Rent" },
-          { id: "VISITS", label: "Visits & Bookings" },
-          { id: "SUPPORT", label: "Support & Maintenance" },
-          { id: "SETTLEMENT", label: "Deposit & Settlement" },
+          { id: "VISITS", label: "Visits & Tours" },
+          { id: "SUPPORT", label: "Support & General" },
         ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => setTypeFilter(tab.id)}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border cursor-pointer ${
               typeFilter === tab.id
                 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/40 shadow-md"
                 : "bg-slate-900/60 text-slate-400 border-slate-800/80 hover:text-slate-200"
@@ -184,10 +200,31 @@ export default function NotificationsPage() {
       {/* Notifications List */}
       <div className="space-y-3">
         {loading ? (
-          <div className="py-12 text-center text-slate-400 text-xs">Loading notifications...</div>
+          <div className="py-16 text-center space-y-3">
+            <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-slate-400 text-xs">Loading notifications...</p>
+          </div>
         ) : filtered.length === 0 ? (
-          <Card className="p-8 text-center border-slate-800 bg-slate-900/80 text-xs text-slate-400">
-            No notifications found for this filter tab.
+          <Card className="p-12 text-center border-slate-800 bg-slate-900/80 space-y-3 rounded-2xl">
+            <Bell className="h-10 w-10 text-slate-600 mx-auto" />
+            <h3 className="text-white font-bold text-sm">No Notifications Found</h3>
+            <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+              {typeFilter === "UNREAD"
+                ? "You're all caught up! No unread notifications right now."
+                : "You don't have any notifications yet. Alerts for visit requests, approvals, and rescheduling will appear here."}
+            </p>
+            <div className="pt-2 flex justify-center gap-3">
+              <Link href="/discover">
+                <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs cursor-pointer">
+                  Explore PGs
+                </Button>
+              </Link>
+              <Link href="/visits">
+                <Button size="sm" variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800 text-xs cursor-pointer">
+                  My Visits
+                </Button>
+              </Link>
+            </div>
           </Card>
         ) : (
           filtered.map((notif) => (

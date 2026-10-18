@@ -4,6 +4,19 @@
  * Never exposes server secrets (service role keys, DB passwords, Razorpay secrets) to client bundles.
  */
 
+/**
+ * Client-safe public environment config.
+ * Safe for bundling in client components. Contains strictly public variables.
+ */
+export const clientEnv = {
+  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    "",
+  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+};
+
 export const env = {
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:

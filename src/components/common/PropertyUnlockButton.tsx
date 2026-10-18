@@ -2,9 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Lock, CheckCircle2, AlertTriangle, Loader2, RefreshCw } from "lucide-react";
 
 export interface PropertyUnlockButtonProps {
@@ -171,27 +169,27 @@ export function PropertyUnlockButton({
   if (isUnlocked) {
     if (variant === "button") {
       return (
-        <Button disabled variant="outline" size="sm" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 gap-1 text-xs">
-          <CheckCircle2 className="h-3.5 w-3.5" />
+        <button disabled className="px-3 py-1.5 rounded-xl bg-[#A7F3D0]/30 text-[#10164F] border border-[#A7F3D0] font-bold text-xs flex items-center gap-1.5 cursor-default">
+          <CheckCircle2 className="h-3.5 w-3.5 text-[#10164F]" />
           <span>✓ Property Unlocked</span>
-        </Button>
+        </button>
       );
     }
 
     return (
-      <Card className="p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+      <Card className="p-5 rounded-3xl bg-[#A7F3D0]/20 border border-[#A7F3D0] text-[#10164F] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-xs">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 font-bold text-emerald-300 text-sm">
-            <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
+          <div className="flex items-center gap-2 font-bold text-[#10164F] text-sm">
+            <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
             <span>✓ Property Unlocked — Access Pass Active</span>
           </div>
-          <p className="text-[11px] text-slate-300">
+          <p className="text-[12px] text-gray-700">
             Your ₹9 Property Unlock gives you full access to property details and visit information. It does not reserve or book a room.
           </p>
         </div>
-        <Badge variant="outline" className="text-emerald-400 border-emerald-500/30 bg-emerald-500/20 shrink-0">
+        <span className="px-3 py-1 rounded-full bg-[#A7F3D0] text-[#10164F] font-bold text-xs shrink-0">
           Active Pass
-        </Badge>
+        </span>
       </Card>
     );
   }
@@ -200,55 +198,56 @@ export function PropertyUnlockButton({
   return (
     <div className="space-y-3">
       {errorMessage && (
-        <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center justify-between gap-2">
+        <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center justify-between gap-2 shadow-xs">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0" />
+            <AlertTriangle className="h-4 w-4 text-rose-500 shrink-0" />
             <span>{errorMessage}</span>
           </div>
-          <Button onClick={handleUnlockClick} size="sm" variant="ghost" className="h-7 text-xs text-rose-300 hover:text-white underline gap-1">
+          <button onClick={handleUnlockClick} className="text-xs text-rose-700 hover:text-rose-900 underline font-semibold flex items-center gap-1 cursor-pointer">
             <RefreshCw className="h-3 w-3" />
             <span>Try Again</span>
-          </Button>
+          </button>
         </div>
       )}
 
       {cancelledMessage && (
-        <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between gap-2">
+        <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center justify-between gap-2 shadow-xs">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
+            <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
             <span>{cancelledMessage}</span>
           </div>
-          <Button onClick={handleUnlockClick} size="sm" variant="ghost" className="h-7 text-xs text-amber-200 hover:text-white underline gap-1">
+          <button onClick={handleUnlockClick} className="text-xs text-amber-700 hover:text-amber-900 underline font-semibold flex items-center gap-1 cursor-pointer">
             <RefreshCw className="h-3 w-3" />
             <span>Try Again</span>
-          </Button>
+          </button>
         </div>
       )}
 
       {variant === "banner" ? (
-        <Card className="p-6 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-slate-900 border border-amber-500/30 text-amber-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
+        <Card className="p-6 rounded-3xl bg-gradient-to-r from-[#FFF45C]/25 via-[#FAFAF7] to-white border border-[#FFF45C] text-[#10164F] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
           <div className="space-y-1.5">
-            <div className="flex items-center gap-2 font-bold text-amber-300 text-base">
-              <Lock className="h-5 w-5 text-amber-400 shrink-0" />
-              <span>🔒 Exact Location &amp; Owner Contact Details Locked</span>
+            <div className="flex items-center gap-2 font-extrabold text-[#10164F] text-base">
+              <span className="p-1.5 rounded-lg bg-[#FFF45C] text-[#10164F]">
+                <Lock className="h-4 w-4" />
+              </span>
+              <span>Exact Location &amp; Owner Contact Details Protected</span>
             </div>
-            <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
-              Unlock exact street address, landlord phone number, WhatsApp contact &amp; visit instructions for <strong>₹9</strong>.
+            <p className="text-xs text-gray-700 max-w-2xl leading-relaxed">
+              Unlock exact street address, landlord phone number, WhatsApp contact &amp; physical visit instructions for <strong>₹9</strong>.
             </p>
-            <p className="text-[11px] text-amber-400/90 font-medium italic">
-              Note: ₹9 Property Unlock gives you access to property details and visit information. It does not reserve or book a room.
+            <p className="text-[11px] text-[#3129C8] font-bold">
+              Note: ₹9 Property Unlock provides verified access pass. It is separate from room booking or advance rent.
             </p>
           </div>
-          <Button
+          <button
             onClick={handleUnlockClick}
             disabled={isProcessing}
-            size="lg"
-            className="bg-amber-400 hover:bg-amber-500 text-slate-950 font-extrabold gap-2 whitespace-nowrap text-xs sm:text-sm shadow-lg shrink-0"
+            className="bg-[#3129C8] hover:bg-[#251fa3] text-white font-extrabold px-6 py-3 rounded-2xl flex items-center gap-2 whitespace-nowrap text-xs sm:text-sm shadow-md shrink-0 transition-all cursor-pointer disabled:opacity-50"
           >
             {isProcessing ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin text-slate-950" />
-                <span>Processing Payment...</span>
+                <Loader2 className="h-4 w-4 animate-spin text-white" />
+                <span>Processing Unlock...</span>
               </>
             ) : (
               <>
@@ -256,19 +255,18 @@ export function PropertyUnlockButton({
                 <span>Unlock for ₹9</span>
               </>
             )}
-          </Button>
+          </button>
         </Card>
       ) : (
-        <Button
+        <button
           onClick={handleUnlockClick}
           disabled={isProcessing}
-          size="lg"
-          className="bg-amber-400 hover:bg-amber-500 text-slate-950 font-extrabold gap-2 text-xs shadow-lg"
+          className="bg-[#3129C8] hover:bg-[#251fa3] text-white font-extrabold px-4 py-2.5 rounded-2xl flex items-center gap-2 text-xs shadow-md transition-all cursor-pointer disabled:opacity-50"
         >
           {isProcessing ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin text-slate-950" />
-              <span>Processing Payment...</span>
+              <Loader2 className="h-4 w-4 animate-spin text-white" />
+              <span>Processing...</span>
             </>
           ) : (
             <>
@@ -276,7 +274,7 @@ export function PropertyUnlockButton({
               <span>Unlock for ₹9</span>
             </>
           )}
-        </Button>
+        </button>
       )}
     </div>
   );
